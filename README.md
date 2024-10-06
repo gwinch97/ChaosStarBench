@@ -1,6 +1,6 @@
 # ChaosStarBench
 
-Open-source benchmark suite for testing faults in cloud microservices, adapted from the original DeathStarBench[github.com/delimitrou/DeathStarBench] developed by the SAIL group.
+Open-source benchmark suite for testing faults in cloud microservices, adapted from the original [DeathStarBench](github.com/delimitrou/DeathStarBench) and developed by the [Packets](https://packets-lab.github.io/) and Complex Systems and Networks Labs at the University of Sussex.
 
 ChaosStarBench currently only includes fault injection functionality for the Social Network deployment, however, fault injection will hope to be expanded to the remaining microservice deployments in the future.
 
@@ -17,7 +17,7 @@ ChaosStarBench currently only includes fault injection functionality for the Soc
 
 ChaosStarBench is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
 
-ChaosStarBench is being developed by the Packets[https://packets-lab.github.io/] and Complex Systems and Networks Labs at the University of Sussex. 
+ChaosStarBench is being developed by the [Packets](https://packets-lab.github.io/) and Complex Systems and Networks Labs at the University of Sussex. 
 
 ## Publications
 
