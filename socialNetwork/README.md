@@ -30,23 +30,14 @@ Supported actions:
 
 ### Before you start
 
-* Install Docker and Docker Compose.
+* Install Docker.
 * Make sure the following ports are available: port `8080` for Nginx frontend, `8081` for media frontend and `16686` for Jaeger.
 
 ### Start docker containers
 
-#### Start docker containers on single machine with `docker-compose`
+#### Start containers on a minikube cluster using Kubernetes.
 
-Start docker containers by running `docker-compose up -d`. All images will be
-pulled from Docker Hub.
-
-#### Start docker containers on a machine cluster with `docker swarm`
-
-Before starting the containers, make sure you are on the master node of the docker swarm nodes.
-
-```bash
-docker stack deploy --compose-file=docker-compose-swarm.yml <service-name>
-```
+run the command `bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>`
 
 ### Register users and construct social graphs
 
