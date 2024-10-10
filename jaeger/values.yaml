@@ -1,0 +1,111 @@
+# jaeger-values.yaml
+provisionDataStore:
+  cassandra: false
+  elasticsearch: true
+  kafka: false
+
+storage:
+  type: elasticsearch
+  elasticsearch:
+    nodeCount: 2
+    host: jaeger-elasticsearch.monitoring.svc.cluster.local
+    port: 9200
+    usePassword: false
+    #tolerations:
+    #  - key: "key"
+    #    operator: "Equal" 
+    #    value: "monitoring"
+    #    effect: "NoSchedule"
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"
+
+
+query:
+  service:
+    type: ClusterIP
+    port: 80
+  tolerations:
+    - key: "key"
+      operator: "Equal"
+      value: "monitoring"
+      effect: "NoSchedule"
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"
+#  basepath: "/"
+#  otlp:
+#    httpPort: 16685
+#  options:
+#    query:
+#      base-path: "/"
+#  additionalFlags:
+#    query.sampling.strategies-file: "/sampling/sampling-strategy.json"
+#  extraConfigmapMounts:
+#    - name: sampling-strategy-config
+#      mountPath: /sampling
+#      configMap: jaeger-sampling-strategy
+#      readOnly: true
+
+collector:
+  service:
+    type: ClusterIP
+    port: 80
+  tolerations:
+    - key: "key"
+      operator: "Equal"
+      value: "monitoring"
+      effect: "NoSchedule"
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"
+
+ingester:
+  tolerations:
+    - key: "key"
+      operator: "Equal"
+      value: "monitoring"
+      effect: "NoSchedule"
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"
+
+agent:
+  tolerations:
+    - key: "key"
+      operator: "Equal"
+      value: "monitoring"
+      effect: "NoSchedule"
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"

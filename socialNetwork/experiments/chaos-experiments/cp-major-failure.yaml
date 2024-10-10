@@ -1,0 +1,18 @@
+kind: PodChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: socialnetwork
+  name: cp-major-failure
+  annotations:
+    experiment.chaos-mesh.org/pause: 'false'
+    kubectl.kubernetes.io/last-applied-configuration: '{"apiVersion"'
+spec:
+  selector:
+    namespaces:
+      - socialnetwork
+    labelSelectors:
+      app: compose-post-service
+  mode: fixed
+  value: '2'
+  action: pod-failure
+  duration: 3600s

@@ -32,6 +32,8 @@ RUN apt-get update && \
         libsasl2-2 \
         libmemcached11 \
         libmemcachedutil2 \
+	iproute2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /social-network-microservices

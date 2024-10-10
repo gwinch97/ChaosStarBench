@@ -1,0 +1,514 @@
+version: "3.9"
+
+volumes:
+ certs:
+   driver: local
+ esdata01:
+   driver: local
+ kibanadata:
+   driver: local
+ metricbeatdata01:
+   driver: local
+ filebeatdata01:
+   driver: local
+ logstashdata01:
+   driver: local
+
+networks:
+ default:
+   name: elastic
+   external: false
+   
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+    - 17160:9090
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+    - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+    - cadvisor
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - 16170:8080
+    command:
+      - "--allow_dynamic_housekeeping=false"
+      - "--housekeeping_interval=1s"
+      - "--docker_only=true"
+      - "--disable_metrics=percpu,sched,tcp,udp,disk,diskIO,accelerator,hugetlb,referenced_memory,cpu_topology,resctrl"
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+    - redis
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+    - 6379:6379
+
+  social-graph-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: social-graph-service
+    #    ports:
+    #      - 10000:9090
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+      social-graph-mongodb:
+        condition: service_started
+    deploy:
+      replicas: 3
+    restart: always
+    entrypoint: SocialGraphService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  social-graph-mongodb:
+    image: mongo:4.4.6
+    hostname: social-graph-mongodb
+    # ports:
+    #   - 27018:27017
+    deploy:
+      replicas: 3
+    restart: always
+
+  social-graph-redis:
+    image: redis
+    hostname: social-graph-redis
+    # ports:
+    #   - 6380:6379
+    deploy:
+      replicas: 3
+    restart: always
+
+  home-timeline-redis:
+    image: redis
+    hostname: home-timeline-redis
+    # ports:
+    #   - 6381:6379
+    deploy:
+      replicas: 3
+    restart: always
+
+  compose-post-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: compose-post-service
+    #    ports:
+    #      - 10001:9090
+    deploy:
+      replicas: 3
+    restart: always
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+    entrypoint: ComposePostService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  post-storage-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: post-storage-service
+    #ports:
+    #  - 10002:9090
+    cap_add:
+      - NET_ADMIN
+    deploy:
+      replicas: 3
+    restart: always
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+      post-storage-mongodb:
+        condition: service_started
+    entrypoint: PostStorageService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  post-storage-memcached:
+    image: memcached
+    hostname: post-storage-memcached
+    #    ports:
+    #      - 11212:11211
+    deploy:
+      replicas: 3
+    restart: always
+
+  post-storage-mongodb:
+    image: mongo:4.4.6
+    hostname: post-storage-mongodb
+    #    ports:
+    #      - 27019:27017
+    deploy:
+      replicas: 3
+    restart: always
+
+  user-timeline-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: user-timeline-service
+    #    ports:
+    #      - 10003:9090
+    deploy:
+      replicas: 3
+    restart: always
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+      user-timeline-mongodb:
+        condition: service_started
+    entrypoint: UserTimelineService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  user-timeline-redis:
+    image: redis
+    hostname: user-timeline-redis
+    #    ports:
+    #      - 6383:6379
+    deploy:
+      replicas: 3
+    restart: always
+
+  user-timeline-mongodb:
+    image: mongo:4.4.6
+    hostname: user-timeline-mongodb
+    #    ports:
+    #      - 27020:27017
+    deploy:
+      replicas: 3
+    restart: always
+
+  url-shorten-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: url-shorten-service
+    #    ports:
+    #      - 10004:9090
+    deploy:
+      replicas: 3
+    restart: always
+    entrypoint: UrlShortenService
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+      url-shorten-mongodb:
+        condition: service_started
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  url-shorten-memcached:
+    image: memcached
+    hostname: url-shorten-memcached
+    #    ports:
+    #      - 11213:11211
+    deploy:
+      replicas: 3
+    restart: always
+
+  url-shorten-mongodb:
+    image: mongo:4.4.6
+    hostname: url-shorten-mongodb
+    #    ports:
+    #      - 27021:27017
+    deploy:
+      replicas: 3
+    restart: always
+
+  user-service:
+    image: gilow/social-network-microservices:latest
+    hostname: user-service
+    #    ports:
+    #      - 10005:9090
+    deploy:
+      replicas: 3
+    restart: always
+    cap_add: 
+      - NET_ADMIN
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+      user-mongodb:
+        condition: service_started
+    entrypoint: UserService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  user-memcached:
+    image: memcached
+    hostname: user-memcached
+    #    ports:
+    #      - 11214:11211
+    deploy:
+      replicas: 3
+    restart: always
+
+  user-mongodb:
+    image: mongo:4.4.6
+    hostname: user-mongodb
+    # ports:
+    #   - 27023:27017
+    deploy:
+      replicas: 3
+    restart: always
+
+  media-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: media-service
+    #    ports:
+    #      - 10006:9090
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+      media-mongodb:
+        condition: service_started
+    deploy:
+      replicas: 3
+    restart: always
+    entrypoint: MediaService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  media-memcached:
+    image: memcached
+    hostname: media-memcached
+    #    ports:
+    #      - 11215:11211
+    deploy:
+      replicas: 3
+    restart: always
+
+  media-mongodb:
+    image: mongo:4.4.6
+    hostname: media-mongodb
+    #    ports:
+    #      - 27024:27017
+    deploy:
+      replicas: 3
+    restart: always
+
+  text-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: text-service
+    #    ports:
+    #      - 10007:9090
+    deploy:
+      replicas: 3
+    restart: always
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+    entrypoint: TextService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  unique-id-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: unique-id-service
+    #    ports:
+    #      - 10008:9090
+    deploy:
+      replicas: 3
+    restart: always
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+    entrypoint: UniqueIdService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  user-mention-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: user-mention-service
+    cap_add:
+      - NET_ADMIN
+    #    ports:
+    #      - 10009:9090
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+    deploy:
+      replicas: 3
+    restart: always
+    entrypoint: UserMentionService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  home-timeline-service:
+    image: deathstarbench/social-network-microservices:latest
+    hostname: home-timeline-service
+    #    ports:
+    #      - 10010:9090
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+    deploy:
+      replicas: 3
+    restart: always
+    entrypoint: HomeTimelineService
+    volumes:
+      - ./config:/social-network-microservices/config
+
+  nginx-thrift:
+    image: yg397/openresty-thrift:xenial
+    hostname: nginx-thrift
+    ports:
+      - 8080:8080
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+    deploy:
+      replicas: 1
+    restart: always
+    volumes:
+      - ./nginx-web-server/lua-scripts:/usr/local/openresty/nginx/lua-scripts
+      - ./nginx-web-server/pages:/usr/local/openresty/nginx/pages
+      - ./nginx-web-server/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./nginx-web-server/jaeger-config.json:/usr/local/openresty/nginx/jaeger-config.json
+      - ./gen-lua:/gen-lua
+      - ./docker/openresty-thrift/lua-thrift:/usr/local/openresty/lualib/thrift
+
+  media-frontend:
+    image: yg397/media-frontend:xenial
+    hostname: media-frontend
+    ports:
+      - 8081:8080
+    restart: always
+    depends_on:
+      jaeger-agent:
+        condition: service_started
+    deploy:
+      replicas: 1
+    volumes:
+      - ./media-frontend/lua-scripts:/usr/local/openresty/nginx/lua-scripts
+      - ./media-frontend/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+
+  jaeger-agent:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      - SPAN_STORAGE_TYPE=elasticsearch
+    command: [
+      "--es.server-urls=http://localhost:9200",
+      "--es.num-shards=1",
+      "--es.num-replicas=0",
+      "--log-level=error"
+    ]
+    ports:
+      #      - 5775:5775/udp
+      #      - 6831:6831/udp
+      #      - 6832:6832/udp
+      #      - 5778:5778
+      - 16686:16686
+      #      - 14268:14268
+      #      - 9411:9411
+    restart: always
+    depends_on:
+      - es01
+      
+  
+  setup:
+   image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+   volumes:
+     - certs:/usr/share/elasticsearch/config/certs
+   user: "0"
+   command: >
+     bash -c '
+       if [ x${ELASTIC_PASSWORD} == x ]; then
+         echo "Set the ELASTIC_PASSWORD environment variable in the .env file";
+         exit 1;
+       elif [ x${KIBANA_PASSWORD} == x ]; then
+         echo "Set the KIBANA_PASSWORD environment variable in the .env file";
+         exit 1;
+       fi;
+       if [ ! -f config/certs/ca.zip ]; then
+         echo "Creating CA";
+         bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;
+         unzip config/certs/ca.zip -d config/certs;
+       fi;
+       if [ ! -f config/certs/certs.zip ]; then
+         echo "Creating certs";
+         echo -ne \
+         "instances:\n"\
+         "  - name: es01\n"\
+         "    dns:\n"\
+         "      - es01\n"\
+         "      - localhost\n"\
+         "    ip:\n"\
+         "      - 127.0.0.1\n"\
+         "  - name: kibana\n"\
+         "    dns:\n"\
+         "      - kibana\n"\
+         "      - localhost\n"\
+         "    ip:\n"\
+         "      - 127.0.0.1\n"\
+         > config/certs/instances.yml;
+         bin/elasticsearch-certutil cert --silent --pem -out config/certs/certs.zip --in config/certs/instances.yml --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key;
+         unzip config/certs/certs.zip -d config/certs;
+       fi;
+       echo "Setting file permissions"
+       chown -R root:root config/certs;
+       find . -type d -exec chmod 750 \{\} \;;
+       find . -type f -exec chmod 640 \{\} \;;
+       echo "Waiting for Elasticsearch availability";
+       until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
+       echo "Setting kibana_system password";
+       until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+       echo "All done!";
+     '
+   healthcheck:
+     test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
+     interval: 1s
+     timeout: 5s
+     retries: 120
+  
+  es01:
+   depends_on:
+     setup:
+       condition: service_healthy
+   image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+   labels:
+     co.elastic.logs/module: elasticsearch
+   volumes:
+     - certs:/usr/share/elasticsearch/config/certs
+     - esdata01:/usr/share/elasticsearch/data
+   ports:
+     - ${ES_PORT}:9200
+   environment:
+     - node.name=es01
+     - cluster.name=${CLUSTER_NAME}
+     - discovery.type=single-node
+     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+     - bootstrap.memory_lock=true
+     - xpack.security.enabled=true
+     - xpack.security.http.ssl.enabled=true
+     - xpack.security.http.ssl.key=certs/es01/es01.key
+     - xpack.security.http.ssl.certificate=certs/es01/es01.crt
+     - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
+     - xpack.security.transport.ssl.enabled=true
+     - xpack.security.transport.ssl.key=certs/es01/es01.key
+     - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
+     - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
+     - xpack.security.transport.ssl.verification_mode=certificate
+     - xpack.license.self_generated.type=${LICENSE}
+   mem_limit: ${ES_MEM_LIMIT}
+   ulimits:
+     memlock:
+       soft: -1
+       hard: -1
+   healthcheck:
+     test:
+       [
+         "CMD-SHELL",
+         "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+       ]
+     interval: 10s
+     timeout: 10s
+     retries: 120

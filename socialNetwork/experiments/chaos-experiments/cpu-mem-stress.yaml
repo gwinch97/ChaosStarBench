@@ -1,0 +1,19 @@
+kind: StressChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: socialnetwork
+  name: cp-mem-cpu-stress
+  annotations:
+    experiment.chaos-mesh.org/pause: 'false'
+spec:
+  selector:
+    namespaces:
+      - socialnetwork
+    labelSelectors:
+      app: compose-post-service
+  mode: one
+  stressors:
+    memory:
+      workers: 2
+      size: 3GB
+  duration: 1800s

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "kubernetes.io/hostname"
+                operator: In
+                values:
+                - "minikube-m02"  # Specify the node name where you want Prometheus to be deployed
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest  # Replace with your Prometheus image
+        ports:
+        - containerPort: 9090
+          name: web
+
