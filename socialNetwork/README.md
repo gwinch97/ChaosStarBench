@@ -6,7 +6,7 @@ A social network with unidirectional follow relationships, implemented with loos
 
 ![Social Network Architecture](figures/socialNet_arch.png)
 
-Supported actions:
+## Supported actions:
 
 * Create text post (optional media: image, video, shortened URL, user tag)
 * Read post
@@ -33,11 +33,40 @@ Supported actions:
 * Install Docker.
 * Make sure the following ports are available: port `8080` for Nginx frontend, `8081` for media frontend and `16686` for Jaeger.
 
-### Start docker containers
+### Start containers on a minikube cluster using Kubernetes.
 
-#### Start containers on a minikube cluster using Kubernetes.
+Run the startup command 
+```bash
+bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
+```
 
-run the command `bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>`
+You may need to forward the ports manually
+```bash
+screen -dmS kube-tunnel bash -c "minikube tunnel; exec bash"
+```
+
+```bash
+screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl config set-context --current --namespace=monitoring; kubectl get pods | grep prometheus-server | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 9090"
+```
+
+```bash
+screen -dmS chaos-pf bash -c "./pod_running_check.sh 'chaos-mesh' 'chaos-dashboard'; helm upgrade chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-mesh --version 2.6.3 --set dashboard.securityMode=false; kubectl config set-context --current --namespace=chaos-mesh; kubectl get pods | grep chaos-dashboard | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 2333"
+```
+
+```bash
+screen -dmS jaeger-pf bash -c "./pod_running_check.sh 'socialnetwork' 'jaeger'; kubectl config set-context --current --namespace=socialnetwork; kubectl get pods | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686"
+```
+
+### Enable metrics-server for horizontal and vertical scaling
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
+
+```bash
+kubectl edit deploy metrics-server -n kube-system
+# - --kubelet-insecure-tls=true
+```
 
 ### Register users and construct social graphs
 
@@ -46,13 +75,14 @@ Register users and construct social graph by running
 
 ### Running HTTP workload generator
 
-#### Make
+#### Run Make
 
 ```bash
 cd ../wrk2
 make
 ```
-back to socialNetwork
+
+#### Back to socialNetwork
 ```bash
 cd ../socialNetwork
 ```
