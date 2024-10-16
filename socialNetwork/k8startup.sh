@@ -1,9 +1,9 @@
 #!/bin/bash
+
 cpus=$1
 mem=$2
 n_nodes=$3
 n_inst=$4
-
 
 # Startup minikube cluster
 status=$(minikube status --format='{{.Host}}')
@@ -12,6 +12,7 @@ if [[ "$status" == "Running" ]]; then
 else
 	minikube start --cpus=${cpus} --memory=${mem} --extra-config=kubelet.housekeeping-interval=1s --nodes ${n_nodes}
 fi
+
 # kubectl taint nodes minikube key=monitoring:NoSchedule
 # Fix for persistant volumes permission issue for >1 node clusters (issue#12360)
 minikube addons disable storage-provisioner
@@ -32,46 +33,26 @@ if [ "$n_inst" -gt 1 ]; then
 		kubectl scale --replicas=${n_inst} $deploy -n socialnetwork;
 	done
 fi
-# sleep 60
 
 # Start requried port-forwarding
-pod_running_check() {
-	namespace=$1
-	pod_name_patter=$2
-	kubectl config set-context --curent --namespace=$namespace
-	while true; do
-		pod_status=$(kubectl get pods --namespace=$namespace | grep $pod_name_pattern | awk '{print $3}')
-		if [[ $pod_status == "Running" ]]; then
-			break
-		fi
-		echo "Waiting for pod '$pod_name_pattern' in namespace '$namespace' to be running..."
-		sleep 5
-	done
-
-}
-
 screen -ls | grep "\.kube-tunnel[[:space:]]" > /dev/null
 if [ $? -ne 0 ]; then
 	screen -dmS kube-tunnel bash -c "minikube tunnel; exec bash" 
 fi
-#sleep 5
 
 screen -ls | grep "\.prom-pf[[:space:]]" > /dev/null
 if [ $? -ne 0 ]; then
 	screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl config set-context --current --namespace=monitoring; kubectl get pods | grep prometheus-server | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 9090"
 fi
-#sleep 5
 
 screen -ls | grep "\.chaos-pf[[:space:]]" > /dev/null
 if [ $? -ne 0 ]; then
 	screen -dmS chaos-pf bash -c "./pod_running_check.sh 'chaos-mesh' 'chaos-dashboard'; helm upgrade chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-mesh --version 2.6.3 --set dashboard.securityMode=false; kubectl config set-context --current --namespace=chaos-mesh; kubectl get pods | grep chaos-dashboard | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 2333"
 fi
-#sleep 5
 
 screen -ls | grep "\.jaeger-pf[[:space:]]" > /dev/null
 if [ $? -ne 0 ]; then
 	screen -dmS jaeger-pf bash -c "./pod_running_check.sh 'socialnetwork' 'jaeger'; kubectl config set-context --current --namespace=socialnetwork; kubectl get pods | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686"
 fi
-#sleep 5
 
 kubectl config set-context --current --namespace=socialnetwork

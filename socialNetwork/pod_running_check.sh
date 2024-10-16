@@ -1,5 +1,4 @@
 #!/bin/bash
-# pod_running_check.sh
 
 pod_running_check() {
     namespace=$1
@@ -16,4 +15,3 @@ pod_running_check() {
 }
 
 pod_running_check "$1" "$2"
-

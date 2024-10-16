@@ -6,7 +6,7 @@ A social network with unidirectional follow relationships, implemented with loos
 
 ![Social Network Architecture](figures/socialNet_arch.png)
 
-Supported actions:
+## Supported actions:
 
 * Create text post (optional media: image, video, shortened URL, user tag)
 * Read post
@@ -33,26 +33,47 @@ Supported actions:
 * Install Docker.
 * Make sure the following ports are available: port `8080` for Nginx frontend, `8081` for media frontend and `16686` for Jaeger.
 
-### Start docker containers
+### Start containers on a minikube cluster using Kubernetes.
 
-#### Start containers on a minikube cluster using Kubernetes.
+Ensure that `pod_running_check.sh` has the required permissions
+```bash
+chmod +x pod_running_check.sh
+```
 
-run the command `bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>`
+Run the startup command 
+```bash
+bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
+```
+
+### Enable metrics-server for horizontal and vertical scaling
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
+
+```bash
+kubectl edit deploy metrics-server -n kube-system
+# - --kubelet-insecure-tls=true
+```
 
 ### Register users and construct social graphs
 
-Register users and construct social graph by running
-`python3 scripts/init_social_graph.py --graph=<socfb-Reed98, ego-twitter, or soc-twitter-follows-mun>`. It will initialize a social graph from a small social network [Reed98 Facebook Networks](http://networkrepository.com/socfb-Reed98.php), a medium social network [Ego Twitter](https://snap.stanford.edu/data/ego-Twitter.html), or a large social network [TWITTER-FOLLOWS-MUN](https://networkrepository.com/soc-twitter-follows-mun.php).
+Register users and construct social graph by running: 
+
+`python3 scripts/init_social_graph.py --graph=<socfb-Reed98, ego-twitter, or soc-twitter-follows-mun>`.
+
+It will initialize a social graph from a small social network [Reed98 Facebook Networks](http://networkrepository.com/socfb-Reed98.php), a medium social network [Ego Twitter](https://snap.stanford.edu/data/ego-Twitter.html), or a large social network [TWITTER-FOLLOWS-MUN](https://networkrepository.com/soc-twitter-follows-mun.php).
 
 ### Running HTTP workload generator
 
-#### Make
+#### Run Make
 
 ```bash
 cd ../wrk2
 make
 ```
-back to socialNetwork
+
+#### Back to socialNetwork
 ```bash
 cd ../socialNetwork
 ```
@@ -128,4 +149,3 @@ This application is still actively being developed, so keep an eye on the repo t
 ## Questions and contact
 
 You are welcome to submit a pull request if you find a bug or have extended the application in an interesting way. For any questions please contact us at: <microservices-bench-L@list.cornell.edu>
-
