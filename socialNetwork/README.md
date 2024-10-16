@@ -35,26 +35,14 @@ A social network with unidirectional follow relationships, implemented with loos
 
 ### Start containers on a minikube cluster using Kubernetes.
 
+Ensure that `pod_running_check.sh` has the required permissions
+```bash
+chmod +x pod_running_check.sh
+```
+
 Run the startup command 
 ```bash
 bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
-```
-
-You may need to forward the ports manually
-```bash
-screen -dmS kube-tunnel bash -c "minikube tunnel; exec bash"
-```
-
-```bash
-screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl config set-context --current --namespace=monitoring; kubectl get pods | grep prometheus-server | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 9090"
-```
-
-```bash
-screen -dmS chaos-pf bash -c "./pod_running_check.sh 'chaos-mesh' 'chaos-dashboard'; helm upgrade chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-mesh --version 2.6.3 --set dashboard.securityMode=false; kubectl config set-context --current --namespace=chaos-mesh; kubectl get pods | grep chaos-dashboard | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 2333"
-```
-
-```bash
-screen -dmS jaeger-pf bash -c "./pod_running_check.sh 'socialnetwork' 'jaeger'; kubectl config set-context --current --namespace=socialnetwork; kubectl get pods | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686"
 ```
 
 ### Enable metrics-server for horizontal and vertical scaling
@@ -70,8 +58,11 @@ kubectl edit deploy metrics-server -n kube-system
 
 ### Register users and construct social graphs
 
-Register users and construct social graph by running
-`python3 scripts/init_social_graph.py --graph=<socfb-Reed98, ego-twitter, or soc-twitter-follows-mun>`. It will initialize a social graph from a small social network [Reed98 Facebook Networks](http://networkrepository.com/socfb-Reed98.php), a medium social network [Ego Twitter](https://snap.stanford.edu/data/ego-Twitter.html), or a large social network [TWITTER-FOLLOWS-MUN](https://networkrepository.com/soc-twitter-follows-mun.php).
+Register users and construct social graph by running: 
+
+`python3 scripts/init_social_graph.py --graph=<socfb-Reed98, ego-twitter, or soc-twitter-follows-mun>`.
+
+It will initialize a social graph from a small social network [Reed98 Facebook Networks](http://networkrepository.com/socfb-Reed98.php), a medium social network [Ego Twitter](https://snap.stanford.edu/data/ego-Twitter.html), or a large social network [TWITTER-FOLLOWS-MUN](https://networkrepository.com/soc-twitter-follows-mun.php).
 
 ### Running HTTP workload generator
 
@@ -158,4 +149,3 @@ This application is still actively being developed, so keep an eye on the repo t
 ## Questions and contact
 
 You are welcome to submit a pull request if you find a bug or have extended the application in an interesting way. For any questions please contact us at: <microservices-bench-L@list.cornell.edu>
-
