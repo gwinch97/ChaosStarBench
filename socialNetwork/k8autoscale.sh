@@ -40,7 +40,7 @@ if [ "$output" = "error: Metrics API not available" ]; then
     echo "To the command: 'kubectl edit deploy metrics-server -n kube-system'?"
 else
     # the autoscaler can begin
-    kubectl autoscale deployment compose-post-service --cpu-percent=50 --min=1 --max=10
+    kubectl autoscale deployment compose-post-service --cpu-percent=50 --min=1 --max=3
     kubectl autoscale deployment home-timeline-redis --cpu-percent=50 --min=1 --max=2
     kubectl autoscale deployment home-timeline-service --cpu-percent=50 --min=1 --max=2
     kubectl autoscale deployment nginx-thrift --cpu-percent=50 --min=1 --max=2
