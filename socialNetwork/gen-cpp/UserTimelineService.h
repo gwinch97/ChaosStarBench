@@ -37,7 +37,7 @@ class UserTimelineServiceIfFactory {
 
 class UserTimelineServiceIfSingletonFactory : virtual public UserTimelineServiceIfFactory {
  public:
-  UserTimelineServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<UserTimelineServiceIf>& iface) : iface_(iface) {}
+  UserTimelineServiceIfSingletonFactory(const ::std::shared_ptr<UserTimelineServiceIf>& iface) : iface_(iface) {}
   virtual ~UserTimelineServiceIfSingletonFactory() {}
 
   virtual UserTimelineServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -46,7 +46,7 @@ class UserTimelineServiceIfSingletonFactory : virtual public UserTimelineService
   virtual void releaseHandler(UserTimelineServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<UserTimelineServiceIf> iface_;
+  ::std::shared_ptr<UserTimelineServiceIf> iface_;
 };
 
 class UserTimelineServiceNull : virtual public UserTimelineServiceIf {
@@ -334,27 +334,27 @@ class UserTimelineService_ReadUserTimeline_presult {
 
 class UserTimelineServiceClient : virtual public UserTimelineServiceIf {
  public:
-  UserTimelineServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  UserTimelineServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  UserTimelineServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  UserTimelineServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void WriteUserTimeline(const int64_t req_id, const int64_t post_id, const int64_t user_id, const int64_t timestamp, const std::map<std::string, std::string> & carrier);
@@ -364,15 +364,15 @@ class UserTimelineServiceClient : virtual public UserTimelineServiceIf {
   void send_ReadUserTimeline(const int64_t req_id, const int64_t user_id, const int32_t start, const int32_t stop, const std::map<std::string, std::string> & carrier);
   void recv_ReadUserTimeline(std::vector<Post> & _return);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class UserTimelineServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<UserTimelineServiceIf> iface_;
+  ::std::shared_ptr<UserTimelineServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (UserTimelineServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -381,7 +381,7 @@ class UserTimelineServiceProcessor : public ::apache::thrift::TDispatchProcessor
   void process_WriteUserTimeline(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_ReadUserTimeline(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  UserTimelineServiceProcessor(::apache::thrift::stdcxx::shared_ptr<UserTimelineServiceIf> iface) :
+  UserTimelineServiceProcessor(::std::shared_ptr<UserTimelineServiceIf> iface) :
     iface_(iface) {
     processMap_["WriteUserTimeline"] = &UserTimelineServiceProcessor::process_WriteUserTimeline;
     processMap_["ReadUserTimeline"] = &UserTimelineServiceProcessor::process_ReadUserTimeline;
@@ -392,24 +392,24 @@ class UserTimelineServiceProcessor : public ::apache::thrift::TDispatchProcessor
 
 class UserTimelineServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  UserTimelineServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< UserTimelineServiceIfFactory >& handlerFactory) :
+  UserTimelineServiceProcessorFactory(const ::std::shared_ptr< UserTimelineServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< UserTimelineServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< UserTimelineServiceIfFactory > handlerFactory_;
 };
 
 class UserTimelineServiceMultiface : virtual public UserTimelineServiceIf {
  public:
-  UserTimelineServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<UserTimelineServiceIf> >& ifaces) : ifaces_(ifaces) {
+  UserTimelineServiceMultiface(std::vector<std::shared_ptr<UserTimelineServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~UserTimelineServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<UserTimelineServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<UserTimelineServiceIf> > ifaces_;
   UserTimelineServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<UserTimelineServiceIf> iface) {
+  void add(::std::shared_ptr<UserTimelineServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -439,27 +439,27 @@ class UserTimelineServiceMultiface : virtual public UserTimelineServiceIf {
 // only be used when you need to share a connection among multiple threads
 class UserTimelineServiceConcurrentClient : virtual public UserTimelineServiceIf {
  public:
-  UserTimelineServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  UserTimelineServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  UserTimelineServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  UserTimelineServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void WriteUserTimeline(const int64_t req_id, const int64_t post_id, const int64_t user_id, const int64_t timestamp, const std::map<std::string, std::string> & carrier);
@@ -469,8 +469,8 @@ class UserTimelineServiceConcurrentClient : virtual public UserTimelineServiceIf
   int32_t send_ReadUserTimeline(const int64_t req_id, const int64_t user_id, const int32_t start, const int32_t stop, const std::map<std::string, std::string> & carrier);
   void recv_ReadUserTimeline(std::vector<Post> & _return, const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;

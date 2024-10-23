@@ -37,7 +37,7 @@ class HomeTimelineServiceIfFactory {
 
 class HomeTimelineServiceIfSingletonFactory : virtual public HomeTimelineServiceIfFactory {
  public:
-  HomeTimelineServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<HomeTimelineServiceIf>& iface) : iface_(iface) {}
+  HomeTimelineServiceIfSingletonFactory(const ::std::shared_ptr<HomeTimelineServiceIf>& iface) : iface_(iface) {}
   virtual ~HomeTimelineServiceIfSingletonFactory() {}
 
   virtual HomeTimelineServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -46,7 +46,7 @@ class HomeTimelineServiceIfSingletonFactory : virtual public HomeTimelineService
   virtual void releaseHandler(HomeTimelineServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<HomeTimelineServiceIf> iface_;
+  ::std::shared_ptr<HomeTimelineServiceIf> iface_;
 };
 
 class HomeTimelineServiceNull : virtual public HomeTimelineServiceIf {
@@ -341,27 +341,27 @@ class HomeTimelineService_WriteHomeTimeline_presult {
 
 class HomeTimelineServiceClient : virtual public HomeTimelineServiceIf {
  public:
-  HomeTimelineServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  HomeTimelineServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  HomeTimelineServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  HomeTimelineServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ReadHomeTimeline(std::vector<Post> & _return, const int64_t req_id, const int64_t user_id, const int32_t start, const int32_t stop, const std::map<std::string, std::string> & carrier);
@@ -371,15 +371,15 @@ class HomeTimelineServiceClient : virtual public HomeTimelineServiceIf {
   void send_WriteHomeTimeline(const int64_t req_id, const int64_t post_id, const int64_t user_id, const int64_t timestamp, const std::vector<int64_t> & user_mentions_id, const std::map<std::string, std::string> & carrier);
   void recv_WriteHomeTimeline();
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class HomeTimelineServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<HomeTimelineServiceIf> iface_;
+  ::std::shared_ptr<HomeTimelineServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (HomeTimelineServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -388,7 +388,7 @@ class HomeTimelineServiceProcessor : public ::apache::thrift::TDispatchProcessor
   void process_ReadHomeTimeline(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_WriteHomeTimeline(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  HomeTimelineServiceProcessor(::apache::thrift::stdcxx::shared_ptr<HomeTimelineServiceIf> iface) :
+  HomeTimelineServiceProcessor(::std::shared_ptr<HomeTimelineServiceIf> iface) :
     iface_(iface) {
     processMap_["ReadHomeTimeline"] = &HomeTimelineServiceProcessor::process_ReadHomeTimeline;
     processMap_["WriteHomeTimeline"] = &HomeTimelineServiceProcessor::process_WriteHomeTimeline;
@@ -399,24 +399,24 @@ class HomeTimelineServiceProcessor : public ::apache::thrift::TDispatchProcessor
 
 class HomeTimelineServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  HomeTimelineServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< HomeTimelineServiceIfFactory >& handlerFactory) :
+  HomeTimelineServiceProcessorFactory(const ::std::shared_ptr< HomeTimelineServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< HomeTimelineServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< HomeTimelineServiceIfFactory > handlerFactory_;
 };
 
 class HomeTimelineServiceMultiface : virtual public HomeTimelineServiceIf {
  public:
-  HomeTimelineServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<HomeTimelineServiceIf> >& ifaces) : ifaces_(ifaces) {
+  HomeTimelineServiceMultiface(std::vector<std::shared_ptr<HomeTimelineServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~HomeTimelineServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<HomeTimelineServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<HomeTimelineServiceIf> > ifaces_;
   HomeTimelineServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<HomeTimelineServiceIf> iface) {
+  void add(::std::shared_ptr<HomeTimelineServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -446,27 +446,27 @@ class HomeTimelineServiceMultiface : virtual public HomeTimelineServiceIf {
 // only be used when you need to share a connection among multiple threads
 class HomeTimelineServiceConcurrentClient : virtual public HomeTimelineServiceIf {
  public:
-  HomeTimelineServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  HomeTimelineServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  HomeTimelineServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  HomeTimelineServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ReadHomeTimeline(std::vector<Post> & _return, const int64_t req_id, const int64_t user_id, const int32_t start, const int32_t stop, const std::map<std::string, std::string> & carrier);
@@ -476,8 +476,8 @@ class HomeTimelineServiceConcurrentClient : virtual public HomeTimelineServiceIf
   int32_t send_WriteHomeTimeline(const int64_t req_id, const int64_t post_id, const int64_t user_id, const int64_t timestamp, const std::vector<int64_t> & user_mentions_id, const std::map<std::string, std::string> & carrier);
   void recv_WriteHomeTimeline(const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;

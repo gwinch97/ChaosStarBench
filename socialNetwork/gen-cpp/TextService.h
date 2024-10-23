@@ -36,7 +36,7 @@ class TextServiceIfFactory {
 
 class TextServiceIfSingletonFactory : virtual public TextServiceIfFactory {
  public:
-  TextServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<TextServiceIf>& iface) : iface_(iface) {}
+  TextServiceIfSingletonFactory(const ::std::shared_ptr<TextServiceIf>& iface) : iface_(iface) {}
   virtual ~TextServiceIfSingletonFactory() {}
 
   virtual TextServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -45,7 +45,7 @@ class TextServiceIfSingletonFactory : virtual public TextServiceIfFactory {
   virtual void releaseHandler(TextServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<TextServiceIf> iface_;
+  ::std::shared_ptr<TextServiceIf> iface_;
 };
 
 class TextServiceNull : virtual public TextServiceIf {
@@ -184,42 +184,42 @@ class TextService_ComposeText_presult {
 
 class TextServiceClient : virtual public TextServiceIf {
  public:
-  TextServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  TextServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  TextServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  TextServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ComposeText(TextServiceReturn& _return, const int64_t req_id, const std::string& text, const std::map<std::string, std::string> & carrier);
   void send_ComposeText(const int64_t req_id, const std::string& text, const std::map<std::string, std::string> & carrier);
   void recv_ComposeText(TextServiceReturn& _return);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class TextServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<TextServiceIf> iface_;
+  ::std::shared_ptr<TextServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (TextServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -227,7 +227,7 @@ class TextServiceProcessor : public ::apache::thrift::TDispatchProcessor {
   ProcessMap processMap_;
   void process_ComposeText(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  TextServiceProcessor(::apache::thrift::stdcxx::shared_ptr<TextServiceIf> iface) :
+  TextServiceProcessor(::std::shared_ptr<TextServiceIf> iface) :
     iface_(iface) {
     processMap_["ComposeText"] = &TextServiceProcessor::process_ComposeText;
   }
@@ -237,24 +237,24 @@ class TextServiceProcessor : public ::apache::thrift::TDispatchProcessor {
 
 class TextServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  TextServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< TextServiceIfFactory >& handlerFactory) :
+  TextServiceProcessorFactory(const ::std::shared_ptr< TextServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< TextServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< TextServiceIfFactory > handlerFactory_;
 };
 
 class TextServiceMultiface : virtual public TextServiceIf {
  public:
-  TextServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<TextServiceIf> >& ifaces) : ifaces_(ifaces) {
+  TextServiceMultiface(std::vector<std::shared_ptr<TextServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~TextServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<TextServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<TextServiceIf> > ifaces_;
   TextServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<TextServiceIf> iface) {
+  void add(::std::shared_ptr<TextServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -275,35 +275,35 @@ class TextServiceMultiface : virtual public TextServiceIf {
 // only be used when you need to share a connection among multiple threads
 class TextServiceConcurrentClient : virtual public TextServiceIf {
  public:
-  TextServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  TextServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  TextServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  TextServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ComposeText(TextServiceReturn& _return, const int64_t req_id, const std::string& text, const std::map<std::string, std::string> & carrier);
   int32_t send_ComposeText(const int64_t req_id, const std::string& text, const std::map<std::string, std::string> & carrier);
   void recv_ComposeText(TextServiceReturn& _return, const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;

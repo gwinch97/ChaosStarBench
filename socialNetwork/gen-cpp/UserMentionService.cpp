@@ -479,10 +479,10 @@ void UserMentionServiceProcessor::process_ComposeUserMentions(int32_t seqid, ::a
   }
 }
 
-::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > UserMentionServiceProcessorFactory::getProcessor(const ::apache::thrift::TConnectionInfo& connInfo) {
+::std::shared_ptr< ::apache::thrift::TProcessor > UserMentionServiceProcessorFactory::getProcessor(const ::apache::thrift::TConnectionInfo& connInfo) {
   ::apache::thrift::ReleaseHandler< UserMentionServiceIfFactory > cleanup(handlerFactory_);
-  ::apache::thrift::stdcxx::shared_ptr< UserMentionServiceIf > handler(handlerFactory_->getHandler(connInfo), cleanup);
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > processor(new UserMentionServiceProcessor(handler));
+  ::std::shared_ptr< UserMentionServiceIf > handler(handlerFactory_->getHandler(connInfo), cleanup);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > processor(new UserMentionServiceProcessor(handler));
   return processor;
 }
 

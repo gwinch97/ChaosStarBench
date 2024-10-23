@@ -38,7 +38,7 @@ class PostStorageServiceIfFactory {
 
 class PostStorageServiceIfSingletonFactory : virtual public PostStorageServiceIfFactory {
  public:
-  PostStorageServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<PostStorageServiceIf>& iface) : iface_(iface) {}
+  PostStorageServiceIfSingletonFactory(const ::std::shared_ptr<PostStorageServiceIf>& iface) : iface_(iface) {}
   virtual ~PostStorageServiceIfSingletonFactory() {}
 
   virtual PostStorageServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -47,7 +47,7 @@ class PostStorageServiceIfSingletonFactory : virtual public PostStorageServiceIf
   virtual void releaseHandler(PostStorageServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<PostStorageServiceIf> iface_;
+  ::std::shared_ptr<PostStorageServiceIf> iface_;
 };
 
 class PostStorageServiceNull : virtual public PostStorageServiceIf {
@@ -436,27 +436,27 @@ class PostStorageService_ReadPosts_presult {
 
 class PostStorageServiceClient : virtual public PostStorageServiceIf {
  public:
-  PostStorageServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  PostStorageServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  PostStorageServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  PostStorageServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void StorePost(const int64_t req_id, const Post& post, const std::map<std::string, std::string> & carrier);
@@ -469,15 +469,15 @@ class PostStorageServiceClient : virtual public PostStorageServiceIf {
   void send_ReadPosts(const int64_t req_id, const std::vector<int64_t> & post_ids, const std::map<std::string, std::string> & carrier);
   void recv_ReadPosts(std::vector<Post> & _return);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class PostStorageServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<PostStorageServiceIf> iface_;
+  ::std::shared_ptr<PostStorageServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (PostStorageServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -487,7 +487,7 @@ class PostStorageServiceProcessor : public ::apache::thrift::TDispatchProcessor 
   void process_ReadPost(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_ReadPosts(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  PostStorageServiceProcessor(::apache::thrift::stdcxx::shared_ptr<PostStorageServiceIf> iface) :
+  PostStorageServiceProcessor(::std::shared_ptr<PostStorageServiceIf> iface) :
     iface_(iface) {
     processMap_["StorePost"] = &PostStorageServiceProcessor::process_StorePost;
     processMap_["ReadPost"] = &PostStorageServiceProcessor::process_ReadPost;
@@ -499,24 +499,24 @@ class PostStorageServiceProcessor : public ::apache::thrift::TDispatchProcessor 
 
 class PostStorageServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  PostStorageServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< PostStorageServiceIfFactory >& handlerFactory) :
+  PostStorageServiceProcessorFactory(const ::std::shared_ptr< PostStorageServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< PostStorageServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< PostStorageServiceIfFactory > handlerFactory_;
 };
 
 class PostStorageServiceMultiface : virtual public PostStorageServiceIf {
  public:
-  PostStorageServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<PostStorageServiceIf> >& ifaces) : ifaces_(ifaces) {
+  PostStorageServiceMultiface(std::vector<std::shared_ptr<PostStorageServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~PostStorageServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<PostStorageServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<PostStorageServiceIf> > ifaces_;
   PostStorageServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<PostStorageServiceIf> iface) {
+  void add(::std::shared_ptr<PostStorageServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -556,27 +556,27 @@ class PostStorageServiceMultiface : virtual public PostStorageServiceIf {
 // only be used when you need to share a connection among multiple threads
 class PostStorageServiceConcurrentClient : virtual public PostStorageServiceIf {
  public:
-  PostStorageServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  PostStorageServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  PostStorageServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  PostStorageServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void StorePost(const int64_t req_id, const Post& post, const std::map<std::string, std::string> & carrier);
@@ -589,8 +589,8 @@ class PostStorageServiceConcurrentClient : virtual public PostStorageServiceIf {
   int32_t send_ReadPosts(const int64_t req_id, const std::vector<int64_t> & post_ids, const std::map<std::string, std::string> & carrier);
   void recv_ReadPosts(std::vector<Post> & _return, const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;

@@ -42,7 +42,7 @@ class SocialGraphServiceIfFactory {
 
 class SocialGraphServiceIfSingletonFactory : virtual public SocialGraphServiceIfFactory {
  public:
-  SocialGraphServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<SocialGraphServiceIf>& iface) : iface_(iface) {}
+  SocialGraphServiceIfSingletonFactory(const ::std::shared_ptr<SocialGraphServiceIf>& iface) : iface_(iface) {}
   virtual ~SocialGraphServiceIfSingletonFactory() {}
 
   virtual SocialGraphServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -51,7 +51,7 @@ class SocialGraphServiceIfSingletonFactory : virtual public SocialGraphServiceIf
   virtual void releaseHandler(SocialGraphServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<SocialGraphServiceIf> iface_;
+  ::std::shared_ptr<SocialGraphServiceIf> iface_;
 };
 
 class SocialGraphServiceNull : virtual public SocialGraphServiceIf {
@@ -952,27 +952,27 @@ class SocialGraphService_InsertUser_presult {
 
 class SocialGraphServiceClient : virtual public SocialGraphServiceIf {
  public:
-  SocialGraphServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  SocialGraphServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  SocialGraphServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  SocialGraphServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void GetFollowers(std::vector<int64_t> & _return, const int64_t req_id, const int64_t user_id, const std::map<std::string, std::string> & carrier);
@@ -997,15 +997,15 @@ class SocialGraphServiceClient : virtual public SocialGraphServiceIf {
   void send_InsertUser(const int64_t req_id, const int64_t user_id, const std::map<std::string, std::string> & carrier);
   void recv_InsertUser();
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class SocialGraphServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<SocialGraphServiceIf> iface_;
+  ::std::shared_ptr<SocialGraphServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (SocialGraphServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -1019,7 +1019,7 @@ class SocialGraphServiceProcessor : public ::apache::thrift::TDispatchProcessor 
   void process_UnfollowWithUsername(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_InsertUser(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  SocialGraphServiceProcessor(::apache::thrift::stdcxx::shared_ptr<SocialGraphServiceIf> iface) :
+  SocialGraphServiceProcessor(::std::shared_ptr<SocialGraphServiceIf> iface) :
     iface_(iface) {
     processMap_["GetFollowers"] = &SocialGraphServiceProcessor::process_GetFollowers;
     processMap_["GetFollowees"] = &SocialGraphServiceProcessor::process_GetFollowees;
@@ -1035,24 +1035,24 @@ class SocialGraphServiceProcessor : public ::apache::thrift::TDispatchProcessor 
 
 class SocialGraphServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  SocialGraphServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< SocialGraphServiceIfFactory >& handlerFactory) :
+  SocialGraphServiceProcessorFactory(const ::std::shared_ptr< SocialGraphServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< SocialGraphServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< SocialGraphServiceIfFactory > handlerFactory_;
 };
 
 class SocialGraphServiceMultiface : virtual public SocialGraphServiceIf {
  public:
-  SocialGraphServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<SocialGraphServiceIf> >& ifaces) : ifaces_(ifaces) {
+  SocialGraphServiceMultiface(std::vector<std::shared_ptr<SocialGraphServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~SocialGraphServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<SocialGraphServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<SocialGraphServiceIf> > ifaces_;
   SocialGraphServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<SocialGraphServiceIf> iface) {
+  void add(::std::shared_ptr<SocialGraphServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -1128,27 +1128,27 @@ class SocialGraphServiceMultiface : virtual public SocialGraphServiceIf {
 // only be used when you need to share a connection among multiple threads
 class SocialGraphServiceConcurrentClient : virtual public SocialGraphServiceIf {
  public:
-  SocialGraphServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  SocialGraphServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  SocialGraphServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  SocialGraphServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void GetFollowers(std::vector<int64_t> & _return, const int64_t req_id, const int64_t user_id, const std::map<std::string, std::string> & carrier);
@@ -1173,8 +1173,8 @@ class SocialGraphServiceConcurrentClient : virtual public SocialGraphServiceIf {
   int32_t send_InsertUser(const int64_t req_id, const int64_t user_id, const std::map<std::string, std::string> & carrier);
   void recv_InsertUser(const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;

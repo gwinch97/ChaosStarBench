@@ -8,14 +8,13 @@
 #define social_network_TYPES_H
 
 #include <iosfwd>
+#include <memory>
 
 #include <thrift/Thrift.h>
 #include <thrift/TApplicationException.h>
 #include <thrift/TBase.h>
 #include <thrift/protocol/TProtocol.h>
 #include <thrift/transport/TTransport.h>
-
-#include <thrift/stdcxx.h>
 
 
 namespace social_network {

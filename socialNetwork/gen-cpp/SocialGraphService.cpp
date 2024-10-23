@@ -2773,10 +2773,10 @@ void SocialGraphServiceProcessor::process_InsertUser(int32_t seqid, ::apache::th
   }
 }
 
-::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > SocialGraphServiceProcessorFactory::getProcessor(const ::apache::thrift::TConnectionInfo& connInfo) {
+::std::shared_ptr< ::apache::thrift::TProcessor > SocialGraphServiceProcessorFactory::getProcessor(const ::apache::thrift::TConnectionInfo& connInfo) {
   ::apache::thrift::ReleaseHandler< SocialGraphServiceIfFactory > cleanup(handlerFactory_);
-  ::apache::thrift::stdcxx::shared_ptr< SocialGraphServiceIf > handler(handlerFactory_->getHandler(connInfo), cleanup);
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > processor(new SocialGraphServiceProcessor(handler));
+  ::std::shared_ptr< SocialGraphServiceIf > handler(handlerFactory_->getHandler(connInfo), cleanup);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > processor(new SocialGraphServiceProcessor(handler));
   return processor;
 }
 

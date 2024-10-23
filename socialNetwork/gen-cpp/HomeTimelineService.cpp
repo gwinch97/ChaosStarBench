@@ -930,10 +930,10 @@ void HomeTimelineServiceProcessor::process_WriteHomeTimeline(int32_t seqid, ::ap
   }
 }
 
-::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > HomeTimelineServiceProcessorFactory::getProcessor(const ::apache::thrift::TConnectionInfo& connInfo) {
+::std::shared_ptr< ::apache::thrift::TProcessor > HomeTimelineServiceProcessorFactory::getProcessor(const ::apache::thrift::TConnectionInfo& connInfo) {
   ::apache::thrift::ReleaseHandler< HomeTimelineServiceIfFactory > cleanup(handlerFactory_);
-  ::apache::thrift::stdcxx::shared_ptr< HomeTimelineServiceIf > handler(handlerFactory_->getHandler(connInfo), cleanup);
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > processor(new HomeTimelineServiceProcessor(handler));
+  ::std::shared_ptr< HomeTimelineServiceIf > handler(handlerFactory_->getHandler(connInfo), cleanup);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > processor(new HomeTimelineServiceProcessor(handler));
   return processor;
 }
 

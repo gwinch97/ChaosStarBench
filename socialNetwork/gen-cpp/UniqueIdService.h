@@ -36,7 +36,7 @@ class UniqueIdServiceIfFactory {
 
 class UniqueIdServiceIfSingletonFactory : virtual public UniqueIdServiceIfFactory {
  public:
-  UniqueIdServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<UniqueIdServiceIf>& iface) : iface_(iface) {}
+  UniqueIdServiceIfSingletonFactory(const ::std::shared_ptr<UniqueIdServiceIf>& iface) : iface_(iface) {}
   virtual ~UniqueIdServiceIfSingletonFactory() {}
 
   virtual UniqueIdServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -45,7 +45,7 @@ class UniqueIdServiceIfSingletonFactory : virtual public UniqueIdServiceIfFactor
   virtual void releaseHandler(UniqueIdServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<UniqueIdServiceIf> iface_;
+  ::std::shared_ptr<UniqueIdServiceIf> iface_;
 };
 
 class UniqueIdServiceNull : virtual public UniqueIdServiceIf {
@@ -185,42 +185,42 @@ class UniqueIdService_ComposeUniqueId_presult {
 
 class UniqueIdServiceClient : virtual public UniqueIdServiceIf {
  public:
-  UniqueIdServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  UniqueIdServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  UniqueIdServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  UniqueIdServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   int64_t ComposeUniqueId(const int64_t req_id, const PostType::type post_type, const std::map<std::string, std::string> & carrier);
   void send_ComposeUniqueId(const int64_t req_id, const PostType::type post_type, const std::map<std::string, std::string> & carrier);
   int64_t recv_ComposeUniqueId();
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class UniqueIdServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<UniqueIdServiceIf> iface_;
+  ::std::shared_ptr<UniqueIdServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (UniqueIdServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -228,7 +228,7 @@ class UniqueIdServiceProcessor : public ::apache::thrift::TDispatchProcessor {
   ProcessMap processMap_;
   void process_ComposeUniqueId(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  UniqueIdServiceProcessor(::apache::thrift::stdcxx::shared_ptr<UniqueIdServiceIf> iface) :
+  UniqueIdServiceProcessor(::std::shared_ptr<UniqueIdServiceIf> iface) :
     iface_(iface) {
     processMap_["ComposeUniqueId"] = &UniqueIdServiceProcessor::process_ComposeUniqueId;
   }
@@ -238,24 +238,24 @@ class UniqueIdServiceProcessor : public ::apache::thrift::TDispatchProcessor {
 
 class UniqueIdServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  UniqueIdServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< UniqueIdServiceIfFactory >& handlerFactory) :
+  UniqueIdServiceProcessorFactory(const ::std::shared_ptr< UniqueIdServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< UniqueIdServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< UniqueIdServiceIfFactory > handlerFactory_;
 };
 
 class UniqueIdServiceMultiface : virtual public UniqueIdServiceIf {
  public:
-  UniqueIdServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<UniqueIdServiceIf> >& ifaces) : ifaces_(ifaces) {
+  UniqueIdServiceMultiface(std::vector<std::shared_ptr<UniqueIdServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~UniqueIdServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<UniqueIdServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<UniqueIdServiceIf> > ifaces_;
   UniqueIdServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<UniqueIdServiceIf> iface) {
+  void add(::std::shared_ptr<UniqueIdServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -275,35 +275,35 @@ class UniqueIdServiceMultiface : virtual public UniqueIdServiceIf {
 // only be used when you need to share a connection among multiple threads
 class UniqueIdServiceConcurrentClient : virtual public UniqueIdServiceIf {
  public:
-  UniqueIdServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  UniqueIdServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  UniqueIdServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  UniqueIdServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   int64_t ComposeUniqueId(const int64_t req_id, const PostType::type post_type, const std::map<std::string, std::string> & carrier);
   int32_t send_ComposeUniqueId(const int64_t req_id, const PostType::type post_type, const std::map<std::string, std::string> & carrier);
   int64_t recv_ComposeUniqueId(const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;

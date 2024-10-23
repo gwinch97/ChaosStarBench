@@ -36,7 +36,7 @@ class UserMentionServiceIfFactory {
 
 class UserMentionServiceIfSingletonFactory : virtual public UserMentionServiceIfFactory {
  public:
-  UserMentionServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<UserMentionServiceIf>& iface) : iface_(iface) {}
+  UserMentionServiceIfSingletonFactory(const ::std::shared_ptr<UserMentionServiceIf>& iface) : iface_(iface) {}
   virtual ~UserMentionServiceIfSingletonFactory() {}
 
   virtual UserMentionServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -45,7 +45,7 @@ class UserMentionServiceIfSingletonFactory : virtual public UserMentionServiceIf
   virtual void releaseHandler(UserMentionServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<UserMentionServiceIf> iface_;
+  ::std::shared_ptr<UserMentionServiceIf> iface_;
 };
 
 class UserMentionServiceNull : virtual public UserMentionServiceIf {
@@ -184,42 +184,42 @@ class UserMentionService_ComposeUserMentions_presult {
 
 class UserMentionServiceClient : virtual public UserMentionServiceIf {
  public:
-  UserMentionServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  UserMentionServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  UserMentionServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  UserMentionServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ComposeUserMentions(std::vector<UserMention> & _return, const int64_t req_id, const std::vector<std::string> & usernames, const std::map<std::string, std::string> & carrier);
   void send_ComposeUserMentions(const int64_t req_id, const std::vector<std::string> & usernames, const std::map<std::string, std::string> & carrier);
   void recv_ComposeUserMentions(std::vector<UserMention> & _return);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class UserMentionServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<UserMentionServiceIf> iface_;
+  ::std::shared_ptr<UserMentionServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (UserMentionServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -227,7 +227,7 @@ class UserMentionServiceProcessor : public ::apache::thrift::TDispatchProcessor 
   ProcessMap processMap_;
   void process_ComposeUserMentions(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  UserMentionServiceProcessor(::apache::thrift::stdcxx::shared_ptr<UserMentionServiceIf> iface) :
+  UserMentionServiceProcessor(::std::shared_ptr<UserMentionServiceIf> iface) :
     iface_(iface) {
     processMap_["ComposeUserMentions"] = &UserMentionServiceProcessor::process_ComposeUserMentions;
   }
@@ -237,24 +237,24 @@ class UserMentionServiceProcessor : public ::apache::thrift::TDispatchProcessor 
 
 class UserMentionServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  UserMentionServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< UserMentionServiceIfFactory >& handlerFactory) :
+  UserMentionServiceProcessorFactory(const ::std::shared_ptr< UserMentionServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< UserMentionServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< UserMentionServiceIfFactory > handlerFactory_;
 };
 
 class UserMentionServiceMultiface : virtual public UserMentionServiceIf {
  public:
-  UserMentionServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<UserMentionServiceIf> >& ifaces) : ifaces_(ifaces) {
+  UserMentionServiceMultiface(std::vector<std::shared_ptr<UserMentionServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~UserMentionServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<UserMentionServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<UserMentionServiceIf> > ifaces_;
   UserMentionServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<UserMentionServiceIf> iface) {
+  void add(::std::shared_ptr<UserMentionServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -275,35 +275,35 @@ class UserMentionServiceMultiface : virtual public UserMentionServiceIf {
 // only be used when you need to share a connection among multiple threads
 class UserMentionServiceConcurrentClient : virtual public UserMentionServiceIf {
  public:
-  UserMentionServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  UserMentionServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  UserMentionServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  UserMentionServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ComposeUserMentions(std::vector<UserMention> & _return, const int64_t req_id, const std::vector<std::string> & usernames, const std::map<std::string, std::string> & carrier);
   int32_t send_ComposeUserMentions(const int64_t req_id, const std::vector<std::string> & usernames, const std::map<std::string, std::string> & carrier);
   void recv_ComposeUserMentions(std::vector<UserMention> & _return, const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;

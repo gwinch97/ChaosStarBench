@@ -36,7 +36,7 @@ class MediaServiceIfFactory {
 
 class MediaServiceIfSingletonFactory : virtual public MediaServiceIfFactory {
  public:
-  MediaServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<MediaServiceIf>& iface) : iface_(iface) {}
+  MediaServiceIfSingletonFactory(const ::std::shared_ptr<MediaServiceIf>& iface) : iface_(iface) {}
   virtual ~MediaServiceIfSingletonFactory() {}
 
   virtual MediaServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -45,7 +45,7 @@ class MediaServiceIfSingletonFactory : virtual public MediaServiceIfFactory {
   virtual void releaseHandler(MediaServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<MediaServiceIf> iface_;
+  ::std::shared_ptr<MediaServiceIf> iface_;
 };
 
 class MediaServiceNull : virtual public MediaServiceIf {
@@ -191,42 +191,42 @@ class MediaService_ComposeMedia_presult {
 
 class MediaServiceClient : virtual public MediaServiceIf {
  public:
-  MediaServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  MediaServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  MediaServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  MediaServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ComposeMedia(std::vector<Media> & _return, const int64_t req_id, const std::vector<std::string> & media_types, const std::vector<int64_t> & media_ids, const std::map<std::string, std::string> & carrier);
   void send_ComposeMedia(const int64_t req_id, const std::vector<std::string> & media_types, const std::vector<int64_t> & media_ids, const std::map<std::string, std::string> & carrier);
   void recv_ComposeMedia(std::vector<Media> & _return);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class MediaServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<MediaServiceIf> iface_;
+  ::std::shared_ptr<MediaServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (MediaServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -234,7 +234,7 @@ class MediaServiceProcessor : public ::apache::thrift::TDispatchProcessor {
   ProcessMap processMap_;
   void process_ComposeMedia(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  MediaServiceProcessor(::apache::thrift::stdcxx::shared_ptr<MediaServiceIf> iface) :
+  MediaServiceProcessor(::std::shared_ptr<MediaServiceIf> iface) :
     iface_(iface) {
     processMap_["ComposeMedia"] = &MediaServiceProcessor::process_ComposeMedia;
   }
@@ -244,24 +244,24 @@ class MediaServiceProcessor : public ::apache::thrift::TDispatchProcessor {
 
 class MediaServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  MediaServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< MediaServiceIfFactory >& handlerFactory) :
+  MediaServiceProcessorFactory(const ::std::shared_ptr< MediaServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< MediaServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< MediaServiceIfFactory > handlerFactory_;
 };
 
 class MediaServiceMultiface : virtual public MediaServiceIf {
  public:
-  MediaServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<MediaServiceIf> >& ifaces) : ifaces_(ifaces) {
+  MediaServiceMultiface(std::vector<std::shared_ptr<MediaServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~MediaServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<MediaServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<MediaServiceIf> > ifaces_;
   MediaServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<MediaServiceIf> iface) {
+  void add(::std::shared_ptr<MediaServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -282,35 +282,35 @@ class MediaServiceMultiface : virtual public MediaServiceIf {
 // only be used when you need to share a connection among multiple threads
 class MediaServiceConcurrentClient : virtual public MediaServiceIf {
  public:
-  MediaServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  MediaServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  MediaServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  MediaServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ComposeMedia(std::vector<Media> & _return, const int64_t req_id, const std::vector<std::string> & media_types, const std::vector<int64_t> & media_ids, const std::map<std::string, std::string> & carrier);
   int32_t send_ComposeMedia(const int64_t req_id, const std::vector<std::string> & media_types, const std::vector<int64_t> & media_ids, const std::map<std::string, std::string> & carrier);
   void recv_ComposeMedia(std::vector<Media> & _return, const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;

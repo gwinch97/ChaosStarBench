@@ -37,7 +37,7 @@ class UrlShortenServiceIfFactory {
 
 class UrlShortenServiceIfSingletonFactory : virtual public UrlShortenServiceIfFactory {
  public:
-  UrlShortenServiceIfSingletonFactory(const ::apache::thrift::stdcxx::shared_ptr<UrlShortenServiceIf>& iface) : iface_(iface) {}
+  UrlShortenServiceIfSingletonFactory(const ::std::shared_ptr<UrlShortenServiceIf>& iface) : iface_(iface) {}
   virtual ~UrlShortenServiceIfSingletonFactory() {}
 
   virtual UrlShortenServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) {
@@ -46,7 +46,7 @@ class UrlShortenServiceIfSingletonFactory : virtual public UrlShortenServiceIfFa
   virtual void releaseHandler(UrlShortenServiceIf* /* handler */) {}
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<UrlShortenServiceIf> iface_;
+  ::std::shared_ptr<UrlShortenServiceIf> iface_;
 };
 
 class UrlShortenServiceNull : virtual public UrlShortenServiceIf {
@@ -314,27 +314,27 @@ class UrlShortenService_GetExtendedUrls_presult {
 
 class UrlShortenServiceClient : virtual public UrlShortenServiceIf {
  public:
-  UrlShortenServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  UrlShortenServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  UrlShortenServiceClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  UrlShortenServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ComposeUrls(std::vector<Url> & _return, const int64_t req_id, const std::vector<std::string> & urls, const std::map<std::string, std::string> & carrier);
@@ -344,15 +344,15 @@ class UrlShortenServiceClient : virtual public UrlShortenServiceIf {
   void send_GetExtendedUrls(const int64_t req_id, const std::vector<std::string> & shortened_urls, const std::map<std::string, std::string> & carrier);
   void recv_GetExtendedUrls(std::vector<std::string> & _return);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
 };
 
 class UrlShortenServiceProcessor : public ::apache::thrift::TDispatchProcessor {
  protected:
-  ::apache::thrift::stdcxx::shared_ptr<UrlShortenServiceIf> iface_;
+  ::std::shared_ptr<UrlShortenServiceIf> iface_;
   virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid, void* callContext);
  private:
   typedef  void (UrlShortenServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
@@ -361,7 +361,7 @@ class UrlShortenServiceProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_ComposeUrls(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_GetExtendedUrls(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
-  UrlShortenServiceProcessor(::apache::thrift::stdcxx::shared_ptr<UrlShortenServiceIf> iface) :
+  UrlShortenServiceProcessor(::std::shared_ptr<UrlShortenServiceIf> iface) :
     iface_(iface) {
     processMap_["ComposeUrls"] = &UrlShortenServiceProcessor::process_ComposeUrls;
     processMap_["GetExtendedUrls"] = &UrlShortenServiceProcessor::process_GetExtendedUrls;
@@ -372,24 +372,24 @@ class UrlShortenServiceProcessor : public ::apache::thrift::TDispatchProcessor {
 
 class UrlShortenServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {
  public:
-  UrlShortenServiceProcessorFactory(const ::apache::thrift::stdcxx::shared_ptr< UrlShortenServiceIfFactory >& handlerFactory) :
+  UrlShortenServiceProcessorFactory(const ::std::shared_ptr< UrlShortenServiceIfFactory >& handlerFactory) :
       handlerFactory_(handlerFactory) {}
 
-  ::apache::thrift::stdcxx::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
+  ::std::shared_ptr< ::apache::thrift::TProcessor > getProcessor(const ::apache::thrift::TConnectionInfo& connInfo);
 
  protected:
-  ::apache::thrift::stdcxx::shared_ptr< UrlShortenServiceIfFactory > handlerFactory_;
+  ::std::shared_ptr< UrlShortenServiceIfFactory > handlerFactory_;
 };
 
 class UrlShortenServiceMultiface : virtual public UrlShortenServiceIf {
  public:
-  UrlShortenServiceMultiface(std::vector<apache::thrift::stdcxx::shared_ptr<UrlShortenServiceIf> >& ifaces) : ifaces_(ifaces) {
+  UrlShortenServiceMultiface(std::vector<std::shared_ptr<UrlShortenServiceIf> >& ifaces) : ifaces_(ifaces) {
   }
   virtual ~UrlShortenServiceMultiface() {}
  protected:
-  std::vector<apache::thrift::stdcxx::shared_ptr<UrlShortenServiceIf> > ifaces_;
+  std::vector<std::shared_ptr<UrlShortenServiceIf> > ifaces_;
   UrlShortenServiceMultiface() {}
-  void add(::apache::thrift::stdcxx::shared_ptr<UrlShortenServiceIf> iface) {
+  void add(::std::shared_ptr<UrlShortenServiceIf> iface) {
     ifaces_.push_back(iface);
   }
  public:
@@ -420,27 +420,27 @@ class UrlShortenServiceMultiface : virtual public UrlShortenServiceIf {
 // only be used when you need to share a connection among multiple threads
 class UrlShortenServiceConcurrentClient : virtual public UrlShortenServiceIf {
  public:
-  UrlShortenServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  UrlShortenServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
     setProtocol(prot);
   }
-  UrlShortenServiceConcurrentClient(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  UrlShortenServiceConcurrentClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     setProtocol(iprot,oprot);
   }
  private:
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
   setProtocol(prot,prot);
   }
-  void setProtocol(apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
+  void setProtocol(std::shared_ptr< ::apache::thrift::protocol::TProtocol> iprot, std::shared_ptr< ::apache::thrift::protocol::TProtocol> oprot) {
     piprot_=iprot;
     poprot_=oprot;
     iprot_ = iprot.get();
     oprot_ = oprot.get();
   }
  public:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getInputProtocol() {
     return piprot_;
   }
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
   void ComposeUrls(std::vector<Url> & _return, const int64_t req_id, const std::vector<std::string> & urls, const std::map<std::string, std::string> & carrier);
@@ -450,8 +450,8 @@ class UrlShortenServiceConcurrentClient : virtual public UrlShortenServiceIf {
   int32_t send_GetExtendedUrls(const int64_t req_id, const std::vector<std::string> & shortened_urls, const std::map<std::string, std::string> & carrier);
   void recv_GetExtendedUrls(std::vector<std::string> & _return, const int32_t seqid);
  protected:
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
-  apache::thrift::stdcxx::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
+  std::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
   ::apache::thrift::protocol::TProtocol* iprot_;
   ::apache::thrift::protocol::TProtocol* oprot_;
   ::apache::thrift::async::TConcurrentClientSyncInfo sync_;
