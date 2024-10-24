@@ -1,9 +1,6 @@
-# Dockerfile - Ubuntu
-# https://github.com/openresty/docker-openresty
-
 FROM ubuntu:xenial
 
-LABEL maintainer="Evan Wies <evan@neomantra.net>"
+LABEL maintainer="Lewis Rye <@LewisRye>"
 
 # Docker Build Arguments
 ARG RESTY_VERSION="1.27.1.1"
