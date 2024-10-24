@@ -6,7 +6,7 @@ ports:
 
 container:
   command: MediaService
-  image: deathstarbench/social-network-microservices
+  image: lewisrye/social-network-microservices
   name: media-service
   ports: 
   - containerPort: 9090

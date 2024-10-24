@@ -22,7 +22,35 @@ minikube addons enable csi-hostpath-driver
 kubectl patch storageclass csi-hostpath-sc -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 
 # Setup deployment
-bash setup-k8.sh
+if kubectl get namespace "socialnetwork" > /dev/null 2>&1; then
+	echo "Namespace socialnetwork exists."
+else
+	kubectl create namespace socialnetwork
+	kubectl config set-context --current --namespace=socialnetwork
+	cd helm-chart
+	helm install v1 socialnetwork
+fi
+
+if kubectl get namespace "monitoring" > /dev/null 2>&1; then
+	echo "Namespace monitoring exists."
+else
+	cd ../..
+	kubectl create namespace monitoring
+	kubectl config set-context --current --namespace=monitoring
+	helm install cadvisor ./cadvisor
+	helm install prometheus ./prometheus
+	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
+	kubectl config set-context --current --namespace=default
+	#helm install jaeger jaegertracing/jaeger -f jaeger/values.yaml
+fi
+
+if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
+        echo "Namespace chaos-mesh exists."
+else
+	kubectl create namespace chaos-mesh
+	kubectl config set-context --current --namespace=chaos-mesh
+	helm install chaos-mesh ./chaos-mesh
+fi
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
@@ -55,4 +83,7 @@ if [ $? -ne 0 ]; then
 	screen -dmS jaeger-pf bash -c "./pod_running_check.sh 'socialnetwork' 'jaeger'; kubectl config set-context --current --namespace=socialnetwork; kubectl get pods | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686"
 fi
 
+# Deploy and patch Metrics Server for autoscaling
 kubectl config set-context --current --namespace=socialnetwork
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'

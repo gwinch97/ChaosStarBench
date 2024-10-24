@@ -11,8 +11,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: prometheus
-    app.kubernetes.io/version: v2.50.1
-    helm.sh/chart: prometheus-25.17.0
+    app.kubernetes.io/version: v2.55.0 # version bump
+    helm.sh/chart: prometheus-25.27.0 # version bump
   name: prometheus-server
   namespace: socialnetwork
   resourceVersion: "28574"

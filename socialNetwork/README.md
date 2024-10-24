@@ -47,6 +47,7 @@ bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
 
 ### Enable metrics-server for horizontal and vertical scaling
 
+> Only repeat this step if metrics API is not available
 ```bash
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```

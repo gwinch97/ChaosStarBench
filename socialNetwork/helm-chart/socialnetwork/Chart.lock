@@ -82,15 +82,15 @@ dependencies:
   version: 0.1.0
 - name: mongodb-sharded
   repository: https://charts.bitnami.com/bitnami
-  version: 6.0.1
+  version: 9.0.2
 - name: mcrouter
   repository: https://evryfs.github.io/helm-charts/
-  version: 0.3.0
+  version: 0.4.0
 - name: redis-cluster
   repository: https://charts.bitnami.com/bitnami
-  version: 8.1.4
+  version: 11.0.6
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 17.3.7
-digest: sha256:ae28f9578ffe74dc4b53bb0acd57c6e2e69c55f1118ed446e16ceb8a98ace498
-generated: "2023-01-17T14:10:40.338928+01:00"
+  version: 20.2.1
+digest: sha256:c04eba6a8efd31c6d0e55996a7c654e430ba6d06ee407f020ee872c58f59df1f
+generated: "2024-10-24T14:11:22.429677383+01:00"
