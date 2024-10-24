@@ -9,7 +9,7 @@ container:
   image: deathstarbench/social-network-microservices
   name: user-mention-service
   ports: 
-  - containerPort: 9090
+    - containerPort: 9090
 
 configMaps:
   - name: jaeger-config.yml

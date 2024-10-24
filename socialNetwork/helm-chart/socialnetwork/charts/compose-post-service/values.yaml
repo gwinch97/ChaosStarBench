@@ -10,6 +10,9 @@ container:
   name: compose-post-service
   ports: 
   - containerPort: 9090
+  resources:
+    limits:
+      cpu: "75m"
 
 configMaps:
   - name: jaeger-config.yml

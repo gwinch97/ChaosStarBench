@@ -4,7 +4,7 @@ else
 	kubectl create namespace socialnetwork
 	kubectl config set-context --current --namespace=socialnetwork
 	cd helm-chart
-	helm install v1 socialnetwork-fault
+	helm install v1 socialnetwork
 fi
 
 if kubectl get namespace "monitoring" > /dev/null 2>&1; then
