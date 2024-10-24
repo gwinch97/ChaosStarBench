@@ -1,4 +1,4 @@
-FROM lewisrye/thrift-microservice-deps:v1 AS builder
+FROM lewisrye/thrift-microservice-deps:latest AS builder
 
 ARG LIB_REDIS_PLUS_PLUS_VERSION=1.2.3
 
