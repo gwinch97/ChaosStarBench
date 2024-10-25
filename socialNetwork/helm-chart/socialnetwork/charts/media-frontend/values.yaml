@@ -5,8 +5,8 @@ ports:
     targetPort: 8080
 
 container:
-  image: yg397/media-frontend
-  imageVersion: xenial
+  image: lewisrye/media-frontend
+  imageVersion: v1
   name: media-frontend
   ports: 
   - containerPort: 8081
@@ -25,8 +25,8 @@ initContainer:
   - name: lua-scripts
     mountPath: /lua-scripts
   command: "/bin/sh" 
-  args: ["-c", "git clone https://github.com/delimitrou/DeathStarBench.git /DeathStarBench &&
-            cp -r /DeathStarBench/socialNetwork/media-frontend/lua-scripts/* /lua-scripts/"]
+  args: ["-c", "git clone https://github.com/gwinch97/ChaosStarBench.git /ChaosStarBench &&
+            cp -r /ChaosStarBench/socialNetwork/media-frontend/lua-scripts/* /lua-scripts/"]
 
 volumes:
   - name: lua-scripts

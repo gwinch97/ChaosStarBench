@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 ARG LIB_MONGOC_VERSION=1.15.0
 ARG LIB_THRIFT_VERSION=0.12.0
 ARG LIB_JSON_VERSION=3.6.1
-ARG LIB_JAEGER_VERSION=0.4.2
+ARG LIB_JAEGER_VERSION=0.5.0
 ARG LIB_YAML_VERSION=0.6.2
 ARG LIB_OPENTRACING_VERSION=1.5.1
 ARG LIB_CPP_JWT_VERSION=1.1.1
@@ -129,7 +129,7 @@ RUN apt-get update \
   && make -j$(nproc) \
   && make install \
   # Install pyyaml
-  && pip3 install PyYAML \
+  && pip3 install PyYAML==5.4.1 \
   # Clean up
   && cd /tmp \
   && rm -rf \
