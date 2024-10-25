@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:24.04
 
 LABEL maintainer="Lewis Rye <@LewisRye>"
 
@@ -7,9 +7,9 @@ ARG RESTY_VERSION="1.27.1.1"
 ARG RESTY_LUAROCKS_VERSION="3.11.1"
 ARG RESTY_OPENSSL_VERSION="3.4.0"
 ARG RESTY_PCRE_VERSION="8.45"
-ARG JAEGER_TRACING_VERSION="0.5.0"
+ARG JAEGER_TRACING_VERSION="0.9.0"
 ARG NGINX_OPENTRACING_VERSION="0.37.0"
-ARG OPENTRACING_CPP_VERSION="1.5.1"
+ARG OPENTRACING_CPP_VERSION="1.6.0"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
     --with-file-aio \
@@ -119,9 +119,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make install \
     && cd /tmp \
     && rm -rf lua-resty-hmac \
-
   ### Add Jaeger plugin
-    && curl -fSL https://github.com/jaegertracing/jaeger-client-cpp/archive/refs/tags/v${JAEGER_TRACING_VERSION}.tar.gz -o v${JAEGER_TRACING_VERSION}.tar.gz \
+    && curl -fSL https://github.com/lewisrye/jaeger-client-cpp/archive/refs/tags/v${JAEGER_TRACING_VERSION}.tar.gz -o v${JAEGER_TRACING_VERSION}.tar.gz \
     && tar xf v${JAEGER_TRACING_VERSION}.tar.gz \
     && cd jaeger-client-cpp-${JAEGER_TRACING_VERSION} \
     && mkdir build && cd build \
