@@ -5,11 +5,11 @@ LABEL maintainer="Lewis Rye <@LewisRye>"
 # Docker Build Arguments
 ARG RESTY_VERSION="1.27.1.1"
 ARG RESTY_LUAROCKS_VERSION="3.11.1"
-ARG RESTY_OPENSSL_VERSION="3.4.0"
-ARG RESTY_PCRE_VERSION="8.45"
-ARG JAEGER_TRACING_VERSION="0.9.0"
-ARG NGINX_OPENTRACING_VERSION="0.37.0"
-ARG OPENTRACING_CPP_VERSION="1.6.0"
+ARG RESTY_OPENSSL_VERSION="1.1.0j"
+ARG RESTY_PCRE_VERSION="8.42"
+ARG JAEGER_TRACING_VERSION="0.5.0"
+ARG NGINX_OPENTRACING_VERSION="0.8.0"
+ARG OPENTRACING_CPP_VERSION="1.5.1"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
     --with-file-aio \
@@ -61,7 +61,6 @@ LABEL resty_eval_post_make="${RESTY_EVAL_POST_MAKE}"
 
 # These are not intended to be user-specified
 ARG _RESTY_CONFIG_DEPS="--with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} --with-pcre=/tmp/pcre-${RESTY_PCRE_VERSION}"
-
 
 # 1) Install apt dependencies
 # 2) Download and untar OpenSSL, PCRE, and OpenResty
@@ -177,7 +176,6 @@ ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/
 ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua;/usr/local/openresty/lualib/?/?.lua;/usr/local/openresty/lualib/thrift/?.lua"
 ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/openresty/lualib/?/?.so"
 
-
 COPY lua-thrift /usr/local/openresty/lualib/thrift
 COPY lua-bridge-tracer /tmp/lua-bridge-tracer
 COPY lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
@@ -201,7 +199,6 @@ ENV LUA_PATH=$LUA_PATH;/gen-lua/?.lua
 RUN luarocks install long \
     && luarocks install lua-resty-jwt \
     && ldconfig
-
 
 # Copy nginx configuration files
 COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
