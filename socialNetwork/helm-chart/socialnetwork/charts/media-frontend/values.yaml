@@ -6,7 +6,7 @@ ports:
 
 container:
   image: lewisrye/media-frontend
-  imageVersion: v1
+  imageVersion: latest
   name: media-frontend
   ports: 
   - containerPort: 8081
