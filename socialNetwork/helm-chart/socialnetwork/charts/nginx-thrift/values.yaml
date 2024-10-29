@@ -27,7 +27,6 @@ container:
     - name: keys
       mountPath: /keys
 
-
 initContainer:
   image: alpine/git
   imageVersion: latest

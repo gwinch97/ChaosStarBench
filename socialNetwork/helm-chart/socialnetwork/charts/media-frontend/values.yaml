@@ -10,6 +10,9 @@ container:
   name: media-frontend
   ports: 
   - containerPort: 8081
+  resources:
+    limits:
+      cpu: "50m"
   env:
   - name: fqdn_suffix
     value: ".{{ .Release.Namespace }}.svc.cluster.local"
