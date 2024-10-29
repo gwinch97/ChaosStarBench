@@ -18,7 +18,7 @@ RUN cd /social-network-microservices \
     && make -j$(nproc) \
     && make install
 
-FROM ubuntu:24.04
+FROM ubuntu:16.04
 
 # Copy compiled C++ binaries and dependencies
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
