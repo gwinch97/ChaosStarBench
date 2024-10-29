@@ -1,12 +1,15 @@
-FROM ubuntu:16.04
+# Dockerfile - Ubuntu Xenial
+# https://github.com/openresty/docker-openresty
 
-LABEL maintainer="Lewis Rye <@LewisRye>"
+FROM ubuntu:xenial
+
+LABEL maintainer="Evan Wies <evan@neomantra.net>"
 
 # Docker Build Arguments
-ARG RESTY_VERSION="1.27.1.1"
-ARG RESTY_LUAROCKS_VERSION="3.11.1"
-ARG RESTY_OPENSSL_VERSION="3.4.0"
-ARG RESTY_PCRE_VERSION="8.45"
+ARG RESTY_VERSION="1.13.6.1"
+ARG RESTY_LUAROCKS_VERSION="3.5.0"
+ARG RESTY_OPENSSL_VERSION="1.0.2k"
+ARG RESTY_PCRE_VERSION="8.41"
 ARG RESTY_J="32"
 ARG RESTY_CONFIG_OPTIONS="\
     --with-file-aio \
@@ -42,6 +45,7 @@ ARG RESTY_CONFIG_OPTIONS_MORE=""
 
 # These are not intended to be user-specified
 ARG _RESTY_CONFIG_DEPS="--with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} --with-pcre=/tmp/pcre-${RESTY_PCRE_VERSION}"
+
 
 # 1) Install apt dependencies
 # 2) Download and untar OpenSSL, PCRE, and OpenResty
@@ -98,6 +102,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
 
+
+
 # Add additional binaries into PATH for convenience
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
 
@@ -123,6 +129,8 @@ COPY lualongnumber /tmp/lualongnumber
 RUN cd /tmp/lualongnumber \
     && make \
     && make install
+
+
 
 # RUN apt-get install -y libboost-all-dev libbson-1.0 libmongoc-1.0-0 \
     # && luarocks install "https://raw.githubusercontent.com/moai/luamongo/master/rockspec/luamongo-scm-0.rockspec"
