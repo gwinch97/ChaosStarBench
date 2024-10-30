@@ -1,6 +1,7 @@
 if kubectl get namespace "socialnetwork" > /dev/null 2>&1; then
-	echo "Namespace socialnetwork exists."
+	echo "Namespace socialnetwork exists"
 else
+	echo "Namespace socialnetwork created"
 	kubectl create namespace socialnetwork
 	kubectl config set-context --current --namespace=socialnetwork
 	cd helm-chart
@@ -8,8 +9,9 @@ else
 fi
 
 if kubectl get namespace "monitoring" > /dev/null 2>&1; then
-	echo "Namespace monitoring exists."
+	echo "Namespace monitoring exists"
 else
+	echo "Namespace monitoring created"
 	cd ../..
 	kubectl create namespace monitoring
 	kubectl config set-context --current --namespace=monitoring
@@ -21,8 +23,9 @@ else
 fi
 
 if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
-        echo "Namespace chaos-mesh exists."
+    echo "Namespace chaos-mesh exists"
 else
+	echo "Namespace chaos-mesh created"
 	kubectl create namespace chaos-mesh
 	kubectl config set-context --current --namespace=chaos-mesh
 	helm install chaos-mesh ./chaos-mesh
