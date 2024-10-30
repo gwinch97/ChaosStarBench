@@ -6,10 +6,11 @@ ports:
 
 container:
   image: lewisrye/media-frontend
-  imageVersion: v1
+  imageVersion: latest
   name: media-frontend
   ports: 
   - containerPort: 8081
+  
   env:
   - name: fqdn_suffix
     value: ".{{ .Release.Namespace }}.svc.cluster.local"

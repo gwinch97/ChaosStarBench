@@ -8,7 +8,7 @@ ports:
 
 container:
   image: lewisrye/openresty-thrift
-  imageVersion: v1
+  imageVersion: latest
   name: nginx-thrift
   ports: 
   - containerPort: 8080
@@ -26,7 +26,6 @@ container:
       mountPath: /gen-lua
     - name: keys
       mountPath: /keys
-
 
 initContainer:
   image: alpine/git
