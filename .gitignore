@@ -9,3 +9,5 @@ build
 wrk2/wrk
 wrk2/*.[oa]
 wrk2/obj/
+
+.idea/

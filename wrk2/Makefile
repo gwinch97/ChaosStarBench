@@ -7,9 +7,15 @@ ifeq ($(TARGET), sunos)
 	CFLAGS += -D_PTHREADS -D_POSIX_C_SOURCE=200112L
 	LIBS   += -lsocket
 else ifeq ($(TARGET), darwin)
-	LDFLAGS += -pagezero_size 10000 -image_base 100000000
+	# Per https://luajit.org/install.html: If MACOSX_DEPLOYMENT_TARGET
+	# is not set then it's forced to 10.4, which breaks compile on Mojave.
+	export MACOSX_DEPLOYMENT_TARGET = $(shell sw_vers -productVersion)
+	# LDFLAGS += -pagezero_size 10000 -image_base 100000000
+	LDFLAGS += -v -ld_classic
+	LIBS += -L/opt/homebrew/opt/openssl@3/lib
+	CFLAGS += -I/usr/local/include -I/opt/homebrew/opt/openssl@3/include
 else ifeq ($(TARGET), linux)
-        CFLAGS  += -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE
+        CFLAGS  += -D_POSIX_C_SOURCE=200809L -D_BSD_SOURCE
 	LIBS    += -ldl
 	LDFLAGS += -Wl,-E
 else ifeq ($(TARGET), freebsd)
@@ -54,7 +60,7 @@ $(ODIR)/%.o : %.c
 
 $(LDIR)/libluajit.a:
 	@echo Building LuaJIT...
-	@$(MAKE) -C $(LDIR) BUILDMODE=static
+	@$(MAKE) -C $(LDIR) BUILDMODE=static XCFLAGS=-DLUAJIT_ENABLE_GC64
 
 .PHONY: all clean
 .SUFFIXES:
@@ -63,6 +69,3 @@ $(LDIR)/libluajit.a:
 vpath %.c   src
 vpath %.h   src
 vpath %.lua scripts
-
-install:
-	cp wrk /usr/local/bin

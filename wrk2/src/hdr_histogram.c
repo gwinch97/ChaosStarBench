@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#ifdef __x86_64__
 #include <x86intrin.h>
+#endif
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
