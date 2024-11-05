@@ -12,6 +12,9 @@ container:
   name: home-timeline-redis
   ports: 
   - containerPort: 6379
+  resources:
+    limits:
+      cpu: "50m"
 
 configMaps:
   - name: redis.conf

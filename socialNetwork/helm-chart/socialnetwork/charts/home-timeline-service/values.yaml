@@ -12,7 +12,7 @@ container:
   - containerPort: 9090
   resources:
     limits:
-      cpu: "30m"
+      cpu: "50m"
 
 configMaps:
   - name: jaeger-config.yml
