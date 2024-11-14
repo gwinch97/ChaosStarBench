@@ -51,14 +51,6 @@ else
 	echo "Ports for kube tunnel already forwarded"
 fi
 
-screen -ls | grep "\.prom-pf[[:space:]]" > /dev/null
-if [ $? -ne 0 ]; then
-	echo "Ports for prometheus forwarded"
-	screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl config set-context --current --namespace=monitoring; kubectl get pods | grep prometheus-server | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 9090"
-else
-	echo "Ports for prometheus already forwarded"
-fi
-
 screen -ls | grep "\.chaos-pf[[:space:]]" > /dev/null
 if [ $? -ne 0 ]; then
 	echo "Ports for chaos forwarded"
@@ -73,6 +65,14 @@ if [ $? -ne 0 ]; then
 	screen -dmS jaeger-pf bash -c "./pod_running_check.sh 'socialnetwork' 'jaeger'; kubectl config set-context --current --namespace=socialnetwork; kubectl get pods | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686"
 else
 	echo "Ports for jaeger already forwarded"
+fi
+
+screen -ls | grep "\.prom-pf[[:space:]]" > /dev/null
+if [ $? -ne 0 ]; then
+	echo "Ports for prometheus forwarded"
+	screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl config set-context --current --namespace=monitoring; kubectl get pods | grep prometheus-server | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 9090"
+else
+	echo "Ports for prometheus already forwarded"
 fi
 
 # Deploy and patch Metrics Server for autoscaling
