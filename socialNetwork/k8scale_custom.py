@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import time
 import requests
 from kubernetes import client, config
 from kubernetes.client import ApiException
@@ -85,6 +86,8 @@ def disable_replicas(namespace, core_api, apps_api):
 
 def start_scaling():
     while True:
+        os.system('clear')
+
         # get jaeger trace latency
         url = f"http://{ip_address}:{jaeger_port}/api/traces"
         for service_name in services.keys():
@@ -123,9 +126,12 @@ def start_scaling():
             for value in values:
                 # timestamp = datetime.fromtimestamp(value[0])
                 utilisation = value[1]
-                print(f"{pod} {utilisation}%")
+                # print(f"{pod} {utilisation}%")
 
         # get prometheus memory usage
+
+        # stop for a few seconds before running again
+        time.sleep(5)
 
 
 if __name__ == "__main__":
