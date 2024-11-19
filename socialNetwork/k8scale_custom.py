@@ -92,71 +92,74 @@ def disable_replicas(namespace, core_api, apps_api):
 
 
 def start_scaling():
-    while True:
-        # GET JAEGER TRACE LATENCY
-        url = f"http://{ip_address}:{jaeger_port}/api/traces"
-        for service_name in services.keys():
-            params = {
-                "service": service_name,
-                "lookback": "15m",
-                "limit": 500
-            }
-            response = requests.get(url, params)
+    try:
+        while True:
+            # GET JAEGER TRACE LATENCY
+            url = f"http://{ip_address}:{jaeger_port}/api/traces"
+            for service_name in services.keys():
+                params = {
+                    "service": service_name,
+                    "lookback": "15m",
+                    "limit": 500
+                }
+                response = requests.get(url, params)
 
-            traces = response.json()["data"]
+                traces = response.json()["data"]
 
-            total_duration = 0
-            span_count = 0
+                total_duration = 0
+                span_count = 0
 
-            for trace in traces:
-                for span in trace["spans"]:
-                    total_duration += span["duration"]
-                    span_count += 1
+                for trace in traces:
+                    for span in trace["spans"]:
+                        total_duration += span["duration"]
+                        span_count += 1
 
-            services[service_name]['duration'] = total_duration / span_count if (span_count > 0) else 0
+                services[service_name]['duration'] = total_duration / span_count if (span_count > 0) else 0
 
-        # GET PROMETHEUS CPU USAGE
-        # rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[15s])
-        url = f"http://{ip_address}:{prom_port}/api/v1/query?query=container_cpu_usage_seconds_total{{namespace='socialnetwork', pod=~'.*service.*'}}[15s]"
-        response = requests.get(url)
+            # GET PROMETHEUS CPU USAGE
+            # rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[15s])
+            url = f"http://{ip_address}:{prom_port}/api/v1/query?query=container_cpu_usage_seconds_total{{namespace='socialnetwork', pod=~'.*service.*'}}[15s]"
+            response = requests.get(url)
 
-        metrics = response.json()["data"]["result"]
+            metrics = response.json()["data"]["result"]
 
-        for metric in metrics:
-            pod = metric["metric"]["pod"]
-            values = metric["values"]
+            for metric in metrics:
+                pod = metric["metric"]["pod"]
+                values = metric["values"]
 
-            cpu_usage = 0
-            for value in values:
-                cpu_usage += float(value[1])
-            services[remove_hex_code(pod)]['cpu'] = cpu_usage
+                cpu_usage = 0
+                for value in values:
+                    cpu_usage += float(value[1])
+                services[remove_hex_code(pod)]['cpu'] = cpu_usage
 
-        # GET PROMETHEUS MEMORY USAGE
-        # rate(container_memory_usage_bytes{namespace=~"socialnetwork", pod=~".*service.*"}[15s])
-        url = f"http://{ip_address}:{prom_port}/api/v1/query?query=container_memory_usage_bytes{{namespace='socialnetwork', pod=~'.*service.*'}}[15s]"
-        response = requests.get(url)
+            # GET PROMETHEUS MEMORY USAGE
+            # rate(container_memory_usage_bytes{namespace=~"socialnetwork", pod=~".*service.*"}[15s])
+            url = f"http://{ip_address}:{prom_port}/api/v1/query?query=container_memory_usage_bytes{{namespace='socialnetwork', pod=~'.*service.*'}}[15s]"
+            response = requests.get(url)
 
-        metrics = response.json()["data"]["result"]
+            metrics = response.json()["data"]["result"]
 
-        for metric in metrics:
-            pod = metric["metric"]["pod"]
-            values = metric["values"]
+            for metric in metrics:
+                pod = metric["metric"]["pod"]
+                values = metric["values"]
 
-            mem_usage = 0
-            for value in values:
-                mem_usage += float(value[1])
-            services[remove_hex_code(pod)]['mem'] = mem_usage / 1024  # get usage from bytes to megabytes
+                mem_usage = 0
+                for value in values:
+                    mem_usage += float(value[1])
+                services[remove_hex_code(pod)]['mem'] = mem_usage / 1024  # get usage from bytes to megabytes
 
-        # print values to the console
-        os.system('clear')
-        for service_name in services.keys():
-            print(f"{service_name:<{30}}"  # force the data into a fixed width table
-                  f"| CPU: {f'{float(services[service_name]['cpu']):.2f}%':<{10}}"
-                  f"| MEM: {f'{float(services[service_name]['mem']):.2f}MB':<{10}}"
-                  f"| LATENCY: {f'{float(services[service_name]["duration"]):.2f}ms':<{10}}")
+            # print values to the console
+            os.system('clear')
+            for service_name in services.keys():
+                print(f"{service_name:<{30}}"  # force the data into a fixed width table
+                    f"| CPU: {f'{float(services[service_name]['cpu']):.2f}%':<{8}}"
+                    f"| MEM: {f'{float(services[service_name]['mem']):.2f}MB':<{10}}"
+                    f"| LATENCY: {f'{float(services[service_name]["duration"]):.2f}ms':<{10}}")
 
-        # stop for 15 few seconds before running again
-        time.sleep(15)
+            # stop for 15 few seconds before running again
+            time.sleep(15)
+    except KeyboardInterrupt:
+        exit()
 
 
 if __name__ == "__main__":
