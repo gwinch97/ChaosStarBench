@@ -1,7 +1,6 @@
 import os
-from datetime import datetime
-
 import time
+
 import requests
 from kubernetes import client, config
 from kubernetes.client import ApiException
@@ -10,13 +9,18 @@ ip_address = "127.0.0.1"
 jaeger_port = 16686
 prom_port = 9090
 
-services = {"post-storage-service": 0, "user-mention-service": 0, "post-storage-memcached": 0, "nginx-thrift": 0,
-            "social-graph-redis": 0, "user-service": 0, "media-memcached": 0, "unique-id-service": 0,
-            "user-mongodb": 0, "media-frontend": 0, "user-timeline-redis": 0, "user-memcached": 0,
-            "url-shorten-mongodb": 0, "home-timeline-redis": 0, "media-service": 0, "social-graph-service": 0,
-            "media-mongodb": 0, "url-shorten-memcached": 0, "social-graph-mongodb": 0, "user-timeline-mongodb": 0,
-            "post-storage-mongodb": 0, "url-shorten-service": 0, "compose-post-service": 0,
-            "user-timeline-service": 0, "home-timeline-service": 0}
+# map of services that can be scaled
+services = {"post-storage-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "user-mention-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "user-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "unique-id-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "media-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "social-graph-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "url-shorten-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "compose-post-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "user-timeline-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "home-timeline-service": {"duration": 0, "cpu": 0, "mem": 0},
+            "text-service": {"duration": 0, "cpu": 0, "mem": 0}}
 
 
 def main():
@@ -34,21 +38,24 @@ def main():
     start_scaling()
 
 
+def remove_hex_code(pod_name):
+    return "-".join(pod_name.split("-")[:-2])
+
+
 def disable_hpa(namespace, core_api, autoscale_api):
     try:
         pods = core_api.list_namespaced_pod(namespace=namespace).items
 
         for pod in pods:
-            # extract name of pod without the hex codes
-            resource_name = "-".join(pod.metadata.name.split("-")[:-2])
+            # extract name of pod without the hex code at the end
+            resource_name = remove_hex_code(pod.metadata.name)
 
             try:
-                # disable HPA
+                # disable HPA for every service to ensure there are no conflicts with this script
                 autoscale_api.delete_namespaced_horizontal_pod_autoscaler(
                     name=resource_name,
                     namespace=namespace,
                 )
-                # print(f"Disable HPA: {resource_name}") # for debugging
             except ApiException as e:
                 pass
 
@@ -61,7 +68,7 @@ def disable_replicas(namespace, core_api, apps_api):
         pods = core_api.list_namespaced_pod(namespace=namespace).items
         for pod in pods:
             # extract name of pod without the hex codes
-            resource_name = "-".join(pod.metadata.name.split("-")[:-2])
+            resource_name = remove_hex_code(pod.metadata.name)
 
             try:
                 # remove all replicas
@@ -86,15 +93,13 @@ def disable_replicas(namespace, core_api, apps_api):
 
 def start_scaling():
     while True:
-        os.system('clear')
-
-        # get jaeger trace latency
+        # GET JAEGER TRACE LATENCY
         url = f"http://{ip_address}:{jaeger_port}/api/traces"
         for service_name in services.keys():
             params = {
                 "service": service_name,
-                "lookback": "1h",
-                "limit": 100
+                "lookback": "15m",
+                "limit": 500
             }
             response = requests.get(url, params)
 
@@ -108,14 +113,11 @@ def start_scaling():
                     total_duration += span["duration"]
                     span_count += 1
 
-            services[service_name] = total_duration / span_count if (span_count > 0) else 0
+            services[service_name]['duration'] = total_duration / span_count if (span_count > 0) else 0
 
-        for service_name in services.keys():
-            print(service_name, services[service_name])
-
-        # get prometheus cpu usage
-        # rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork",pod!~"cadvisor.+|prometheus.+|ngin.+"}[15s])
-        url = f"http://{ip_address}:{prom_port}/api/v1/query?query=container_cpu_usage_seconds_total{{namespace='socialnetwork', pod!~'.*cadvisor.*|.*prometheus.*|.*jaeger.*'}}[15s]"  # every 15s sample freq
+        # GET PROMETHEUS CPU USAGE
+        # rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[15s])
+        url = f"http://{ip_address}:{prom_port}/api/v1/query?query=container_cpu_usage_seconds_total{{namespace='socialnetwork', pod=~'.*service.*'}}[15s]"
         response = requests.get(url)
 
         metrics = response.json()["data"]["result"]
@@ -123,15 +125,38 @@ def start_scaling():
         for metric in metrics:
             pod = metric["metric"]["pod"]
             values = metric["values"]
+
+            cpu_usage = 0
             for value in values:
-                # timestamp = datetime.fromtimestamp(value[0])
-                utilisation = value[1]
-                # print(f"{pod} {utilisation}%")
+                cpu_usage += float(value[1])
+            services[remove_hex_code(pod)]['cpu'] = cpu_usage
 
-        # get prometheus memory usage
+        # GET PROMETHEUS MEMORY USAGE
+        # rate(container_memory_usage_bytes{namespace=~"socialnetwork", pod=~".*service.*"}[15s])
+        url = f"http://{ip_address}:{prom_port}/api/v1/query?query=container_memory_usage_bytes{{namespace='socialnetwork', pod=~'.*service.*'}}[15s]"
+        response = requests.get(url)
 
-        # stop for a few seconds before running again
-        time.sleep(5)
+        metrics = response.json()["data"]["result"]
+
+        for metric in metrics:
+            pod = metric["metric"]["pod"]
+            values = metric["values"]
+
+            mem_usage = 0
+            for value in values:
+                mem_usage += float(value[1])
+            services[remove_hex_code(pod)]['mem'] = mem_usage / 1024  # get usage from bytes to megabytes
+
+        # print values to the console
+        os.system('clear')
+        for service_name in services.keys():
+            print(f"{service_name:<{30}}"  # force the data into a fixed width table
+                  f"| CPU: {f'{float(services[service_name]['cpu']):.2f}%':<{10}}"
+                  f"| MEM: {f'{float(services[service_name]['mem']):.2f}MB':<{10}}"
+                  f"| LATENCY: {f'{float(services[service_name]["duration"]):.2f}ms':<{10}}")
+
+        # stop for 15 few seconds before running again
+        time.sleep(15)
 
 
 if __name__ == "__main__":
