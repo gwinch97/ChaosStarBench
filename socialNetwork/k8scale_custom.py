@@ -10,6 +10,13 @@ ip_address = "127.0.0.1"
 jaeger_port = 16686
 prom_port = 9090
 
+# kubernetes APIs
+config.load_kube_config()
+
+core_api = client.CoreV1Api()
+apps_api = client.AppsV1Api()
+autoscale_api = client.AutoscalingV1Api()
+
 # scaling specific settings
 scale_down_threshold = 40  # cpu usage % when you need to scale down
 scale_down_grace_period = 30  # time in seconds between staying at the threshold and scaling down
@@ -37,28 +44,21 @@ services = {"post-storage-service": {"duration": 0, "cpu": 0, "mem": 0, "instanc
 
 
 def main():
-    # kubernetes APIs
-    config.load_kube_config()
-
-    core_api = client.CoreV1Api()
-    apps_api = client.AppsV1Api()
-    autoscale_api = client.AutoscalingV1Api()
-
     print("Running Autoscaling Script")
 
     # disable HPA and replicas to ensure you can scale with custom metrics
-    disable_hpa("socialnetwork", core_api, autoscale_api)
-    disable_replicas("socialnetwork", core_api, apps_api)
+    disable_hpa("socialnetwork")
+    disable_replicas("socialnetwork")
 
     # ready to begin gathering data and scaling up
-    start_scaling(apps_api)
+    start_scaling()
 
 
 def remove_hex_code(pod_name):
     return "-".join(pod_name.split("-")[:-2])
 
 
-def disable_hpa(namespace, core_api, autoscale_api):
+def disable_hpa(namespace):
     try:
         pods = core_api.list_namespaced_pod(namespace=namespace).items
 
@@ -79,7 +79,7 @@ def disable_hpa(namespace, core_api, autoscale_api):
         print(f"Unexpected Exception: {e}")
 
 
-def disable_replicas(namespace, core_api, apps_api):
+def disable_replicas(namespace):
     try:
         pods = core_api.list_namespaced_pod(namespace=namespace).items
         for pod in pods:
@@ -106,7 +106,7 @@ def disable_replicas(namespace, core_api, apps_api):
         print(e)
 
 
-def start_scaling(apps_api):
+def start_scaling():
     try:
         while True:
             # GET JAEGER TRACE LATENCY
@@ -130,12 +130,13 @@ def start_scaling(apps_api):
                 total_duration = 0
                 span_count = 0
 
+                # TODO: Fix this so that it only gets the average of the top 95th percentile
                 for trace in traces:
                     for span in trace["spans"]:
                         total_duration += span["duration"]
                         span_count += 1
 
-                services[service_name]['duration'] = total_duration / span_count if (span_count > 0) else 0
+                services[service_name]['duration'] = ((total_duration / span_count) / 1000) if (span_count > 0) else 0
 
             # GET PROMETHEUS CPU USAGE
             # rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])
@@ -170,26 +171,27 @@ def start_scaling(apps_api):
                 services[remove_hex_code(pod)]['mem'] = mem_usage / (1024 ** 2)  # get usage from bytes to megabytes
 
             # os.system('clear')
+            print("--------------------------------------------------")
             for service_name in services.keys():
                 # print the data into a fixed width table
-                # print(f"{service_name:<{30}}"
-                #       f"| CPU: {f'{float(services[service_name]['cpu']):.2f}%':<{8}}"
-                #       f"| MEM: {f'{float(services[service_name]['mem']):.2f}MB':<{10}}"
-                #       f"| LATENCY: {f'{float(services[service_name]["duration"]):.2f}ms':<{10}}")
+                print(f"{service_name:<{30}}"
+                      f"| CPU: {f'{float(services[service_name]['cpu']):.2f}%':<{8}}"
+                      f"| MEM: {f'{float(services[service_name]['mem']):.2f}MB':<{10}}"
+                      f"| LATENCY: {f'{float(services[service_name]["duration"]):.2f}ms':<{10}}")
 
                 # check if you need to scale the service
                 # based on whether you are allowed to add or remove instances
                 # and whether they are already attempting to scale
                 if (services[service_name]['instances'] < maximum_instances
                         and service_name not in threads
-                        and float(services[service_name]['cpu']) > scale_up_threshold):
-                    thread = threading.Thread(target=scale_up, args=(service_name, apps_api), name=f"{service_name}")
+                        and float(services[service_name]['cpu']) > (scale_up_threshold * services[service_name]['instances'])):
+                    thread = threading.Thread(target=scale_up, args=(service_name,), name=f"{service_name}")
                     threads.append(f"{service_name}")
                     thread.start()
                 elif (services[service_name]['instances'] > minimum_instances
                       and service_name not in threads
                       and float(services[service_name]['cpu']) < scale_down_threshold):
-                    thread = threading.Thread(target=scale_down, args=(service_name, apps_api), name=f"{service_name}")
+                    thread = threading.Thread(target=scale_down, args=(service_name,), name=f"{service_name}")
                     threads.append(f"{service_name}")
                     thread.start()
 
@@ -203,9 +205,9 @@ def start_scaling(apps_api):
         pass
 
 
-def scale_up(service_name, apps_api):
-    print(f"{service_name} hit >{scale_up_threshold}% CPU, checking if it is a good idea to scale up.")
-    print(f"Entering thread {threading.current_thread().name}")
+def scale_up(service_name):
+    print(f"{service_name} hit >{scale_up_threshold}% CPU")
+    print(f"Checking if it is a good idea to scale up on thread '{threading.current_thread().name}'.")
     time.sleep(scale_up_grace_period)  # check after grace period before scaling
 
     if float(services[service_name]['cpu']) > scale_up_threshold:
@@ -220,17 +222,17 @@ def scale_up(service_name, apps_api):
             body=deployment
         )
 
-        services[service_name]['instances'] += 1 # update the number of instances in the service list
+        services[service_name]['instances'] += 1  # update the number of instances in the service list
         print(f"{service_name} scaled UP to {services[service_name]['instances']} instance(s)")
-        time.sleep(after_grace_period) # wait before allowing to scale up or down again
+        time.sleep(after_grace_period)  # wait before allowing to scale up or down again
 
     print(f"Exiting thread {threading.current_thread().name}.")
     threads.remove(f"{service_name}")  # remove thread from list so that it can run again
 
 
-def scale_down(service_name, apps_api):
-    print(f"{service_name} hit <{scale_down_threshold}% CPU, checking if it is a good idea to scale down.")
-    print(f"Entering thread {threading.current_thread().name}")
+def scale_down(service_name):
+    print(f"{service_name} hit <{scale_down_threshold}% CPU")
+    print(f"Checking if it is a good idea to scale down on thread '{threading.current_thread().name}'.")
     time.sleep(scale_down_grace_period)  # check after grace period before scaling
 
     if float(services[service_name]['cpu']) < scale_down_threshold:
