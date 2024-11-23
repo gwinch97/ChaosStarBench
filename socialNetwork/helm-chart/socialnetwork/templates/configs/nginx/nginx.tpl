@@ -20,7 +20,7 @@ env fqdn_suffix;
 http {
   # Load a vendor tracer
   opentracing on;
-  opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
+  # opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
 
   include       mime.types;
   default_type  application/octet-stream;
