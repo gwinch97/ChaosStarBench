@@ -5,7 +5,11 @@ else
 	kubectl create namespace socialnetwork
 	kubectl config set-context --current --namespace=socialnetwork
 	cd helm-chart
-	helm install v1 socialnetwork
+	helm install socialnetwork ./socialnetwork
+	echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
+	../multiple_pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
+	../multiple_pod_running_check.sh socialnetwork jaeger-collector
+	../multiple_pod_running_check.sh socialnetwork jaeger-query
 fi
 
 if kubectl get namespace "monitoring" > /dev/null 2>&1; then
