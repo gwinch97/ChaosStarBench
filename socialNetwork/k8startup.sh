@@ -11,7 +11,7 @@ status=$(minikube status --format='{{.Host}}')
 if [[ "$status" == "Running" ]]; then
 	echo "Minikube is already running"
 else
-	minikube start --cpus=${cpus} --memory=${mem} --extra-config=kubelet.housekeeping-interval=1s --nodes ${n_nodes}
+	minikube start --cpus=${cpus} --memory=${mem} --extra-config=kubelet.housekeeping-interval=1s --extra-config=kubelet.fail-swap-on=false --nodes ${n_nodes}
 fi
 
 # kubectl taint nodes minikube key=monitoring:NoSchedule
