@@ -12,9 +12,9 @@ container:
   - containerPort: 9090
   resources:
     requests:
-      cpu: "100m"
+      cpu: "250m"
     limits:
-      cpu: "500m"
+      cpu: "1000m"
 
 configMaps:
   - name: service-config.json
