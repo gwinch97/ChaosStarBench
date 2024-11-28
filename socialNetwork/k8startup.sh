@@ -11,7 +11,7 @@ status=$(minikube status --format='{{.Host}}')
 if [[ "$status" == "Running" ]]; then
 	echo "Minikube is already running"
 else
-	minikube start --cpus=${cpus} --memory=${mem} --extra-config=kubelet.housekeeping-interval=1s --nodes ${n_nodes}
+	minikube start --cpus=${cpus} --memory=${mem} --extra-config=kubelet.housekeeping-interval=1s --extra-config=kubelet.fail-swap-on=false --nodes ${n_nodes}
 fi
 
 # kubectl taint nodes minikube key=monitoring:NoSchedule
@@ -63,7 +63,7 @@ fi
 screen -ls | grep "\.jaeger-pf[[:space:]]" > /dev/null
 if [ $? -ne 0 ]; then
 	echo "Ports for jaeger forwarded"		
-	screen -dmS jaeger-pf bash -c "./pod_running_check.sh 'socialnetwork' 'jaeger'; kubectl config set-context --current --namespace=socialnetwork; kubectl get pods | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686"
+	screen -dmS jaeger-pf bash -c "./multiple_pod_running_check.sh 'socialnetwork' 'jaeger-query'; kubectl config set-context --current --namespace=socialnetwork; kubectl get pods | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686"
 else
 	echo "Ports for jaeger already forwarded"
 fi
@@ -78,9 +78,9 @@ fi
 
 # Deploy and patch Metrics Server for autoscaling
 echo "----- DEPLOY METRICS SERVER -----"
-kubectl config set-context --current --namespace=socialnetwork
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+#kubectl config set-context --current --namespace=socialnetwork
+#kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
 # Allow metrics server to run without TLS
 echo "----- PATCH METRICS SERVER -----"
-kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
+#kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'

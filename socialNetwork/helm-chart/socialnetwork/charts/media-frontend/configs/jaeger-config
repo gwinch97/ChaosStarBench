@@ -1,1 +1,12 @@
-{{ include "socialnetwork.templates.other.jaeger-config.yml"  . }}
+# charts/<microservice>/configs/jaeger-config
+{{- define "socialnetwork.templates.other.jaeger-config.yml" }}
+disabled: false
+reporter:
+  logSpans: true
+  localAgentHostPort: "{{ .Values.jaeger.agentHost }}:{{ .Values.jaeger.agentPort }}"
+  queueSize: 100
+  bufferFlushInterval: 10
+sampler:
+  type: "{{ .Values.jaeger.samplerType }}"
+  param: {{ .Values.jaeger.samplerParam }}
+{{- end }}

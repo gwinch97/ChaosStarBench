@@ -9,8 +9,8 @@ dependencies:
   repository: ""
   version: 0.1.0
 - name: jaeger
-  repository: ""
-  version: 0.1.0
+  repository: https://jaegertracing.github.io/helm-charts
+  version: 3.3.0
 - name: media-service
   repository: ""
   version: 0.1.0
@@ -92,5 +92,5 @@ dependencies:
 - name: redis
   repository: https://charts.bitnami.com/bitnami
   version: 20.2.1
-digest: sha256:c04eba6a8efd31c6d0e55996a7c654e430ba6d06ee407f020ee872c58f59df1f
-generated: "2024-10-24T14:11:22.429677383+01:00"
+digest: sha256:1357aee0e495b502a55a315cd826732dd99d54ce3c1ebb89273ca2b091cf3ebd
+generated: "2024-11-22T18:01:08.952195699Z"

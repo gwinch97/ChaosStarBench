@@ -14,7 +14,8 @@ dependencies:
   - name: home-timeline-service
     version: 0.1.0
   - name: jaeger
-    version: 0.1.0
+    version: "3.3.0"
+    repository: "https://jaegertracing.github.io/helm-charts"
   - name: media-service
     version: 0.1.0
   - name: media-mongodb
