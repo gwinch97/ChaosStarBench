@@ -40,9 +40,10 @@ if [ "$n_inst" -gt 1 ]; then
 	done
 fi
 
-# Start requried port-forwarding
+# Start required port-forwarding
 echo "----- PORT FORWARDING -----"
-sleep 5
+sleep 5 # allow time for pods to start
+
 screen -ls | grep "\.kube-tunnel[[:space:]]" > /dev/null
 if [ $? -ne 0 ]; then
 	echo "Ports for kube tunnel forwarded"
