@@ -76,11 +76,19 @@ else
 	echo "Ports for prometheus already forwarded"
 fi
 
+screen -ls | grep "\.es-pf[[:space:]]" > /dev/null
+if [ $? -ne 0 ]; then
+	echo "Ports for elasticsearch forwarded"
+	screen -dmS es-pf bash -c "kubectl port-forward service/socialnetwork-elasticsearch 9200:9200 -n socialnetwork"
+else
+	echo "Ports for elasticsearch already forwarded"
+fi 
+
 # Deploy and patch Metrics Server for autoscaling
-echo "----- DEPLOY METRICS SERVER -----"
-#kubectl config set-context --current --namespace=socialnetwork
-#kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+# echo "----- DEPLOY METRICS SERVER -----"
+# kubectl config set-context --current --namespace=socialnetwork
+# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
 # Allow metrics server to run without TLS
-echo "----- PATCH METRICS SERVER -----"
-#kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
+# echo "----- PATCH METRICS SERVER -----"
+# kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
