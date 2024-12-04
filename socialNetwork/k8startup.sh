@@ -91,7 +91,6 @@ fi
 
 # Deploy and patch Metrics Server for autoscaling
 echo "----- DEPLOY METRICS SERVER -----"
-kubectl config set-context --current --namespace=socialnetwork
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
 # Allow metrics server to run without TLS

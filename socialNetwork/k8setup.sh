@@ -23,7 +23,6 @@ else
 	helm install prometheus ./prometheus
 	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
 	kubectl config set-context --current --namespace=default
-	#helm install jaeger jaegertracing/jaeger -f jaeger/values.yaml
 fi
 
 if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
@@ -34,3 +33,6 @@ else
 	kubectl config set-context --current --namespace=chaos-mesh
 	helm install chaos-mesh ./chaos-mesh
 fi
+
+# go back to socialnetwork namespace
+kubectl config set-context --current --namespace=socialnetwork
