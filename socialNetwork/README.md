@@ -20,11 +20,11 @@ A social network with unidirectional follow relationships, implemented with loos
 
 * Docker
 * Docker-compose
-* Python 3.5+ (with asyncio and aiohttp)
-* libssl-dev (apt-get install libssl-dev)
-* libz-dev (apt-get install libz-dev)
-* luarocks (apt-get install luarocks)
-* luasocket (luarocks install luasocket)
+* Python 3.5+ (`pip install asyncio` and `pip install aiohttp`)
+* libssl-dev (`apt-get install libssl-dev`)
+* libz-dev (`apt-get install libz-dev`)
+* luarocks (`apt-get install luarocks`)
+* luasocket (`luarocks install luasocket`)
 
 ## Running the social network application
 
