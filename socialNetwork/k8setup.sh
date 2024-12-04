@@ -33,6 +33,3 @@ else
 	kubectl config set-context --current --namespace=chaos-mesh
 	helm install chaos-mesh ./chaos-mesh
 fi
-
-# go back to socialnetwork namespace
-kubectl config set-context --current --namespace=socialnetwork
