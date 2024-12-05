@@ -274,3 +274,33 @@ def scale_down(service_name):
 
 if __name__ == "__main__":
     main()
+
+# TODO: Implement efficient scaling algorithm 
+#       from 'Practical Efficient Microservice Autoscaling' (Md Rajib Hossen, Mohammad A. Islam)
+#
+# step 1:   for each time step:
+#
+# step 2:   grab response time, CPU utilisation and CPU throttling statistics
+#
+# step 3:   log the performance statistics for future reference
+#
+# step 4:   check if the response times are too slow and exceed defined limits, 
+#           allocate more resources to ensure that the performance is back to acceptable range
+#
+# step 5:   recalculate safe limits for CPU usage and throttling based on step 6 and 7 respectively
+#
+# step 6:   calculate exploration probability to decide whether or not to try a previously 
+#           stable resource allocation configuration
+#
+# step 7:   determine a new target resource allocation (reduction) based on a reduction limit
+#           i.e. do not scale down more than 20%
+#
+# step 8:   identify services that are currently throttling or close to utilisation limits,
+#           and ensure these services are excluded from resource reductions
+#
+# step 9:   create random configurations of allocation and choose a random configuration with
+#           random probability, this helps explore different setups
+#           i.e. maintain resources, scale down OR scale up
+#
+# step 10:  apply step 7 reduction target, ignoring bottleneck services and then uniformly
+#           reduce the resources across all non-bottleneck services for next time step
