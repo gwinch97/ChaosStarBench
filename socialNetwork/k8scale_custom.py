@@ -291,8 +291,8 @@ if __name__ == "__main__":
 # step 5:   recalculate safe limits for CPU usage and throttling (using equation 6 and 7 
 #           from the paper)
 #
-# step 6:   calculate exploration probability to decide whether or not to try a previously 
-#           stable resource allocation configuration (then go back to step 1)
+# step 6:   calculate exploration probability (equation 8) to decide whether or not to try 
+#           a previously stable resource allocation configuration (then go back to step 1)
 #
 # step 7:   determine a new target resource allocation (reduction) based on a reduction limit
 #           (i.e. do not scale down more than 20%) (using equation 3 and 4 from the paper)
