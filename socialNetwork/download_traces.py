@@ -1,11 +1,10 @@
 import json
-from datetime import datetime, timedelta
 from elasticsearch import Elasticsearch, helpers
 from tqdm import tqdm
 
 # Configuration
 ELASTICSEARCH_HOST = "localhost"
-ELASTICSEARCH_PORT = 9200 
+ELASTICSEARCH_PORT = 9200
 INDEX_PATTERN = "jaeger-span-*"
 OUTPUT_FILE = "jaeger_traces.json"
 
@@ -17,24 +16,10 @@ def export_traces():
     scroll = '2m'
     batch_size = 1000
 
-    # Get the current time and 15 seconds ago
-    now = datetime.now()
-    fifteen_seconds_ago = now - timedelta(seconds=1500)
-
-    # Convert to milliseconds (startTimeMillis is in milliseconds)
-    now_ms = int(now.timestamp() * 1000)  # Convert to milliseconds
-    fifteen_seconds_ago_ms = int(fifteen_seconds_ago.timestamp() * 1000)  # Convert to milliseconds
-
-    # Initialize the query to match traces based on the startTimeMillis field
+    # Initialize the query (match all - maybe change to only match the root of the trace?)
     query = {
-        "_source": ["traceID", "spanID", "operationName", "startTimeMillis", "duration"],  # Adjust based on your fields
         "query": {
-            "range": {
-                "startTimeMillis": {  # Field storing the timestamp in milliseconds
-                    "gte": fifteen_seconds_ago_ms,  # 15 seconds ago in milliseconds
-                    "lte": now_ms  # Current time in milliseconds
-                }
-            }
+            "match_all": {}
         }
     }
 
@@ -68,4 +53,3 @@ def export_traces():
 
 if __name__ == "__main__":
     export_traces()
-
