@@ -8,7 +8,7 @@ ports:
 
 container:
   image: lewisrye/openresty-thrift
-  imageVersion: latest
+  imageVersion: xenial
   name: nginx-thrift
   ports: 
   - containerPort: 8080

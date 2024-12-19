@@ -1,4 +1,4 @@
-FROM lewisrye/thrift-microservice-deps:latest AS builder
+FROM lewisrye/thrift-microservice-deps:xenial AS builder
 
 ARG LIB_REDIS_PLUS_PLUS_VERSION=1.2.3
 
@@ -34,6 +34,5 @@ RUN apt-get update && \
         libmemcachedutil2 \
 	iproute2 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
 
 WORKDIR /social-network-microservices

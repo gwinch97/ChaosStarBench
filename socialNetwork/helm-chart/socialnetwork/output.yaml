@@ -5719,7 +5719,7 @@ spec:
     spec:
       containers:
       - name: "compose-post-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -5802,7 +5802,7 @@ spec:
     spec:
       containers:
       - name: "home-timeline-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -6043,7 +6043,7 @@ spec:
                 - minikube
       containers:
       - name: "media-frontend"
-        image: docker.io/lewisrye/media-frontend:latest
+        image: docker.io/lewisrye/media-frontend:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8081
@@ -6181,7 +6181,7 @@ spec:
     spec:
       containers:
       - name: "media-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -6238,7 +6238,7 @@ spec:
                 - minikube
       containers:
       - name: "nginx-thrift"
-        image: docker.io/lewisrye/openresty-thrift:latest
+        image: docker.io/lewisrye/openresty-thrift:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -6397,7 +6397,7 @@ spec:
     spec:
       containers:
       - name: "post-storage-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -6515,7 +6515,7 @@ spec:
     spec:
       containers:
       - name: "social-graph-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -6558,7 +6558,7 @@ spec:
     spec:
       containers:
       - name: "text-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -6601,7 +6601,7 @@ spec:
     spec:
       containers:
       - name: "unique-id-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -6720,7 +6720,7 @@ spec:
     spec:
       containers:
       - name: "url-shorten-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -6801,7 +6801,7 @@ spec:
     spec:
       containers:
       - name: "user-mention-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -6882,7 +6882,7 @@ spec:
     spec:
       containers:
       - name: "user-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
@@ -7000,7 +7000,7 @@ spec:
     spec:
       containers:
       - name: "user-timeline-service"
-        image: docker.io/lewisrye/social-network-microservices:latest
+        image: docker.io/lewisrye/social-network-microservices:xenial
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
