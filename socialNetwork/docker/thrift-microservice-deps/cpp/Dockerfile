@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:24.04
 
 ARG LIB_MONGOC_VERSION=1.15.0
 ARG LIB_THRIFT_VERSION=0.12.0
@@ -11,9 +11,9 @@ ARG LIB_CPP_REDIS_VERSION=4.3.1
 ARG LIB_AMQP_CPP_VERSION=4.1.4
 ARG LIB_SIMPLEAMQPCLIENT_VERSION=2.4.0
 ARG LIB_HIREDIS_VERSION=1.0.0
-ARG LIB_REDIS_PLUS_PLUS_VERSION=1.2.3
+ARG LIB_REDIS_PLUS_PLUS_VERSION=1.3.13
 
-ARG BUILD_DEPS="ca-certificates g++ cmake wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config librabbitmq-dev python3-dev python3-pip python3-setuptools python3-wheel"
+ARG BUILD_DEPS="ca-certificates cmake g++ wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config libpthread-stubs0-dev librabbitmq-dev python3-dev python3-pip python3-setuptools python3-wheel python3-yaml"
 
 RUN apt-get update \
   && apt-get install -y ${BUILD_DEPS} --no-install-recommends \
@@ -27,8 +27,8 @@ RUN apt-get update \
   && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=0 -DENABLE_EXAMPLES=0 .. \
   && make -j$(nproc) \
   && make install \
-  && cd /tmp \
   # Install lib-thrift
+  && cd /tmp \
   && wget -O thrift-${LIB_THRIFT_VERSION}.tar.gz https://github.com/apache/thrift/archive/v${LIB_THRIFT_VERSION}.tar.gz \
   && tar -zxf thrift-${LIB_THRIFT_VERSION}.tar.gz \
   && cd thrift-${LIB_THRIFT_VERSION} \
@@ -37,8 +37,8 @@ RUN apt-get update \
   && cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=0 .. \
   && make -j$(nproc) \
   && make install \
-  && cd /tmp \
   # Install /nlohmann/json
+  && cd /tmp \
   && wget -O json-${LIB_JSON_VERSION}.tar.gz https://github.com/nlohmann/json/archive/v${LIB_JSON_VERSION}.tar.gz \
   && tar -zxf json-${LIB_JSON_VERSION}.tar.gz \
   && cd json-${LIB_JSON_VERSION} \
@@ -47,8 +47,8 @@ RUN apt-get update \
   && cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=0 .. \
   && make -j$(nproc) \
   && make install \
-  && cd /tmp \
   # Install yaml-cpp
+  && cd /tmp \
   && wget -O yaml-cpp-${LIB_YAML_VERSION}.tar.gz https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-${LIB_YAML_VERSION}.tar.gz \
   && tar -zxf yaml-cpp-${LIB_YAML_VERSION}.tar.gz \
   && cd yaml-cpp-yaml-cpp-${LIB_YAML_VERSION} \
@@ -57,8 +57,8 @@ RUN apt-get update \
   && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" -DYAML_CPP_BUILD_TESTS=0 .. \
   && make -j$(nproc) \
   && make install \
-  && cd /tmp \
   # Install opentracing-cpp
+  && cd /tmp \
   && wget -O opentracing-cpp-${LIB_OPENTRACING_VERSION}.tar.gz https://github.com/opentracing/opentracing-cpp/archive/v${LIB_OPENTRACING_VERSION}.tar.gz \
   && tar -zxf opentracing-cpp-${LIB_OPENTRACING_VERSION}.tar.gz \
   && cd opentracing-cpp-${LIB_OPENTRACING_VERSION} \
@@ -67,8 +67,8 @@ RUN apt-get update \
   && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" -DBUILD_TESTING=0 .. \
   && make -j$(nproc) \
   && make install \
-  && cd /tmp \
   # Install jaeger-client-cpp
+  && cd /tmp \
   && wget -O jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz https://github.com/jaegertracing/jaeger-client-cpp/archive/v${LIB_JAEGER_VERSION}.tar.gz \
   && tar -zxf jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz \
   && cd jaeger-client-cpp-${LIB_JAEGER_VERSION} \
@@ -77,8 +77,8 @@ RUN apt-get update \
   && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" -DHUNTER_ENABLED=0 -DBUILD_TESTING=0 -DJAEGERTRACING_WITH_YAML_CPP=1 -DJAEGERTRACING_BUILD_EXAMPLES=0 .. \
   && make -j$(nproc) \
   && make install \
-  && cd /tmp \
   # Install jwt
+  && cd /tmp \
   && wget -O cpp-jwt-${LIB_CPP_JWT_VERSION}.tar.gz https://github.com/arun11299/cpp-jwt/archive/v${LIB_CPP_JWT_VERSION}.tar.gz \
   && tar -zxf cpp-jwt-${LIB_CPP_JWT_VERSION}.tar.gz \
   && cd cpp-jwt-${LIB_CPP_JWT_VERSION} \
@@ -88,7 +88,7 @@ RUN apt-get update \
   && sed -i 's/\#include \"jwt\/json\/json.hpp\"/\#include \<nlohmann\/json\.hpp\>/g' /usr/local/include/jwt/jwt.hpp \
   # Install cpp_redis
   && cd /tmp \
-  && git clone https://github.com/cpp-redis/cpp_redis.git \
+  && git clone https://github.com/lewisrye/cpp_redis.git \
   && cd cpp_redis && git checkout ${LIB_CPP_REDIS_VERSION} \
   && git submodule init && git submodule update \
   && mkdir cmake-build && cd cmake-build \
@@ -123,15 +123,13 @@ RUN apt-get update \
   && git clone https://github.com/sewenew/redis-plus-plus.git \
   && cd redis-plus-plus \
   && git checkout ${LIB_REDIS_PLUS_PLUS_VERSION} \
-  && sed -i '/Transaction transaction/i\\    ShardsPool* get_shards_pool(){\n        return &_pool;\n    }\n' \
+  && sed -i '/Transaction transaction/i\\    ShardsPool* get_shards_pool(){\n        return _pool.get();\n    }\n' \
      src/sw/redis++/redis_cluster.h \
-  && cmake -DREDIS_PLUS_PLUS_USE_TLS=ON . \
+  && cmake -DREDIS_PLUS_PLUS_CXX_STANDARD=11 -DREDIS_PLUS_PLUS_USE_TLS=ON . \
   && make -j$(nproc) \
-  && make install \
-  # Install pyyaml
-  && pip3 install PyYAML==5.4.1 \
+  && make install
   # Clean up
-  && cd /tmp \
+  RUN cd /tmp \
   && rm -rf \
     mongo-c-driver-${LIB_MONGOC_VERSION}.tar.gz \
     mongo-c-driver-${LIB_MONGOC_VERSION} \
@@ -151,5 +149,5 @@ RUN apt-get update \
     AMQP-CPP \
     SimpleAmqpClient
 
-ENV LD_LIBRARY_PATH /usr/local/lib:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
 RUN ldconfig

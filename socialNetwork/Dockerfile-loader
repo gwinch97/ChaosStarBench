@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 # Install build dependencies
 RUN apt-get update && \
@@ -18,7 +18,7 @@ RUN cd /social-network-microservices/wrk2 \
     && make -j$(nproc) \
     && make install
 
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 # Copy compiled C++ binaries and wrk2/scripts
 COPY --from=builder /usr/local/bin/* /usr/local/bin/

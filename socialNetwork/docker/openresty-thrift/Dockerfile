@@ -1,17 +1,11 @@
-ARG RESTY_IMAGE_BASE="ubuntu"
-ARG RESTY_IMAGE_TAG="xenial"
+FROM ubuntu:24.04
 
-FROM ${RESTY_IMAGE_BASE}:${RESTY_IMAGE_TAG}
-
-LABEL maintainer="Yu Gan <yg397@cornell.edu>"
-
-# Docker Build Arguments
-ARG RESTY_VERSION="1.15.8.1rc1"
-ARG RESTY_LUAROCKS_VERSION="3.5.0"
-ARG RESTY_OPENSSL_VERSION="1.1.0j"
-ARG RESTY_PCRE_VERSION="8.42"
+ARG RESTY_VERSION="1.27.1.1"
+ARG RESTY_LUAROCKS_VERSION="3.11.1"
+ARG RESTY_OPENSSL_VERSION="3.0.15"
+ARG RESTY_PCRE_VERSION="10.44"
 ARG JAEGER_TRACING_VERSION="0.5.0"
-ARG NGINX_OPENTRACING_VERSION="0.8.0"
+ARG NGINX_OPENTRACING_VERSION="0.13.0"
 ARG OPENTRACING_CPP_VERSION="1.5.1"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
@@ -45,25 +39,9 @@ ARG RESTY_CONFIG_OPTIONS="\
     --with-threads \
     --add-dynamic-module=/usr/local/nginx-opentracing-${NGINX_OPENTRACING_VERSION}/opentracing \
     "
-ARG RESTY_CONFIG_OPTIONS_MORE=""
-ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
-ARG RESTY_ADD_PACKAGE_RUNDEPS=""
-ARG RESTY_EVAL_PRE_CONFIGURE=""
-ARG RESTY_EVAL_POST_MAKE=""
-
-LABEL resty_version="${RESTY_VERSION}"
-LABEL resty_luarocks_version="${RESTY_LUAROCKS_VERSION}"
-LABEL resty_openssl_version="${RESTY_OPENSSL_VERSION}"
-LABEL resty_pcre_version="${RESTY_PCRE_VERSION}"
-LABEL resty_config_options="${RESTY_CONFIG_OPTIONS}"
-LABEL resty_config_options_more="${RESTY_CONFIG_OPTIONS_MORE}"
-LABEL resty_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}"
-LABEL resty_add_package_rundeps="${RESTY_ADD_PACKAGE_RUNDEPS}"
-LABEL resty_eval_pre_configure="${RESTY_EVAL_PRE_CONFIGURE}"
-LABEL resty_eval_post_make="${RESTY_EVAL_POST_MAKE}"
 
 # These are not intended to be user-specified
-ARG _RESTY_CONFIG_DEPS="--with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} --with-pcre=/tmp/pcre-${RESTY_PCRE_VERSION}"
+ARG _RESTY_CONFIG_DEPS="--with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} --with-pcre=/tmp/pcre2-${RESTY_PCRE_VERSION}"
 
 # 1) Install apt dependencies
 # 2) Download and untar OpenSSL, PCRE, and OpenResty
@@ -94,9 +72,16 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && if [ -n "${RESTY_EVAL_PRE_CONFIGURE}" ]; then eval $(echo ${RESTY_EVAL_PRE_CONFIGURE}); fi \
     && curl -fSL https://www.openssl.org/source/openssl-${RESTY_OPENSSL_VERSION}.tar.gz -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
-    && curl -fSL http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
-    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
-  ### Build opentracing-cpp
+    && curl -fSL "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${RESTY_PCRE_VERSION}/pcre2-${RESTY_PCRE_VERSION}.tar.gz" -o pcre2-${RESTY_PCRE_VERSION}.tar.gz \
+    && tar xzf pcre2-${RESTY_PCRE_VERSION}.tar.gz \
+    && cd /tmp/pcre2-${RESTY_PCRE_VERSION} \
+    && CFLAGS="-g -O3" ./configure \
+        --prefix=/usr/local/openresty/pcre2 \
+        --libdir=/usr/local/openresty/pcre2/lib \
+        ${RESTY_PCRE_BUILD_OPTIONS} \
+    && CFLAGS="-g -O3" make -j${RESTY_J} \
+    && CFLAGS="-g -O3" make -j${RESTY_J} install \
+    # Build opentracing-cpp
     && cd /tmp \
     && curl -fSL https://github.com/opentracing/opentracing-cpp/archive/v${OPENTRACING_CPP_VERSION}.tar.gz -o opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz\
     && tar -zxf opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz \
@@ -113,7 +98,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && cd /tmp \
     && rm -rf opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz \
               opentracing-cpp-${OPENTRACING_CPP_VERSION} \
-  ### Build lua-resty-hmac
+    # Build lua-resty-hmac
     && cd /tmp \
     && git clone https://github.com/jkeys089/lua-resty-hmac.git \
     && cd lua-resty-hmac \
@@ -121,8 +106,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make install \
     && cd /tmp \
     && rm -rf lua-resty-hmac \
-  ### Add Jaeger plugin
-    && curl -fSL https://github.com/jaegertracing/jaeger-client-cpp/archive/refs/tags/v${JAEGER_TRACING_VERSION}.tar.gz -o v${JAEGER_TRACING_VERSION}.tar.gz \
+    # Add Jaeger plugin
+    && curl -fSL https://github.com/lewisrye/jaeger-client-cpp/archive/refs/tags/v${JAEGER_TRACING_VERSION}.tar.gz -o v${JAEGER_TRACING_VERSION}.tar.gz \
     && tar xf v${JAEGER_TRACING_VERSION}.tar.gz \
     && cd jaeger-client-cpp-${JAEGER_TRACING_VERSION} \
     && mkdir build && cd build \
@@ -130,9 +115,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make && make install \
     && cp libjaegertracing_plugin.so /usr/local/lib/ \
     && cd ../.. && rm -rf v${JAEGER_TRACING_VERSION}.tar.gz \
-    && rm -rf jaeger-client-cpp-${JAEGER_TRACING_VERSION} && rm -rf /root/.hunter
-
-RUN cd /usr/local \
+    && rm -rf jaeger-client-cpp-${JAEGER_TRACING_VERSION} && rm -rf /root/.hunter \
+    # Install nginx opentracing
+    && cd /usr/local \
     && curl -fSL https://github.com/opentracing-contrib/nginx-opentracing/archive/v${NGINX_OPENTRACING_VERSION}.tar.gz -o nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
     && tar -zxf nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
     && rm nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
@@ -148,9 +133,9 @@ RUN cd /usr/local \
         openssl-${RESTY_OPENSSL_VERSION} \
         openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
         openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION} \
-        pcre-${RESTY_PCRE_VERSION}.tar.gz pcre-${RESTY_PCRE_VERSION}
-
-RUN cd /tmp \
+        pcre2-${RESTY_PCRE_VERSION}.tar.gz pcre2-${RESTY_PCRE_VERSION} \
+    # Install luarocks
+    && cd /tmp \
     && curl -fSL  https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
     && tar xzf luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
     && cd luarocks-${RESTY_LUAROCKS_VERSION} \
@@ -186,7 +171,7 @@ COPY lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
 RUN cd /usr/local/openresty/lualib/thrift/src \
     && make \
     && make install \
-  ### Build bridge tracer
+    # Build bridge tracer
     && cd /tmp/lua-bridge-tracer \
     && mkdir -p cmake-build \
     && cd cmake-build \
