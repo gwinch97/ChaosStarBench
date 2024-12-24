@@ -20,7 +20,9 @@ A social network with unidirectional follow relationships, implemented with loos
 
 * Docker
 * Docker-compose
+* Helm
 * Python 3.5+ (with `pip install asyncio` and `pip install aiohttp`)
+* screen (`sudo apt-get install screen`)
 * libssl-dev (`sudo apt-get install libssl-dev`)
 * libz-dev (`sudo apt-get install libz-dev`)
 * luarocks (`sudo apt-get install luarocks`)
@@ -30,7 +32,7 @@ A social network with unidirectional follow relationships, implemented with loos
 
 ### Before you start
 
-* Make sure the following ports are available:
+Make sure the following ports are available:
 - `2333` for Chaos Mesh
 - `8080` for Nginx Frontend
 - `8081` for Media Frontend

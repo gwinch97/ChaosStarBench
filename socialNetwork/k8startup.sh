@@ -47,47 +47,23 @@ fi
 
 # Start required port-forwarding
 echo "----- PORT FORWARDING -----"
-sleep 5 # allow time for pods to start
 
-screen -ls | grep "\.kube-tunnel[[:space:]]" > /dev/null
-if [ $? -ne 0 ]; then
-	echo "Ports for kube tunnel forwarded"
-	screen -dmS kube-tunnel bash -c "minikube tunnel; exec bash" 
-else
-	echo "Ports for kube tunnel already forwarded"
-fi
+# End all existing port forwarding screens
+SESSION_NAMES=("kube-tunnel" "chaos-pf" "jaeger-pf" "prom-pf" "es-pf")
+for SESSION_NAME in "${SESSION_NAMES[@]}"; do
+    if screen -list | grep -q "\.${SESSION_NAME}"; then
+        screen -X -S "$SESSION_NAME" quit
+		echo "Quit open screen $SESSION_NAME"
+    fi
+done
 
-screen -ls | grep "\.chaos-pf[[:space:]]" > /dev/null
-if [ $? -ne 0 ]; then
-	echo "Ports for chaos forwarded"
-	screen -dmS chaos-pf bash -c "./pod_running_check.sh 'chaos-mesh' 'chaos-dashboard'; helm upgrade chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-mesh --version 2.6.3 --set dashboard.securityMode=false; kubectl config set-context --current --namespace=chaos-mesh; kubectl get pods | grep chaos-dashboard | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 2333"
-else
-	echo "Ports for chaos already forwarded"
-fi
-
-screen -ls | grep "\.jaeger-pf[[:space:]]" > /dev/null
-if [ $? -ne 0 ]; then
-	echo "Ports for jaeger forwarded"		
-	screen -dmS jaeger-pf bash -c "./multiple_pod_running_check.sh 'socialnetwork' 'jaeger-query'; kubectl config set-context --current --namespace=socialnetwork; kubectl get pods | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686"
-else
-	echo "Ports for jaeger already forwarded"
-fi
-
-screen -ls | grep "\.prom-pf[[:space:]]" > /dev/null
-if [ $? -ne 0 ]; then
-	echo "Ports for prometheus forwarded"
-	screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl config set-context --current --namespace=monitoring; kubectl get pods | grep prometheus-server | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 9090"
-else
-	echo "Ports for prometheus already forwarded"
-fi
-
-screen -ls | grep "\.es-pf[[:space:]]" > /dev/null
-if [ $? -ne 0 ]; then
-	echo "Ports for elasticsearch forwarded"
-	screen -dmS es-pf bash -c "kubectl port-forward service/socialnetwork-elasticsearch 9200:9200 -n socialnetwork"
-else
-	echo "Ports for elasticsearch already forwarded"
-fi 
+# Forward ports
+screen -dmS kube-tunnel bash -c "minikube tunnel; exec bash"
+screen -dmS chaos-pf bash -c "./pod_running_check.sh 'chaos-mesh' 'chaos-dashboard'; kubectl get pods -n chaos-mesh | grep chaos-dashboard | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 2333; exec bash"
+screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl get pods -n monitoring | grep prometheus-server | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 9090; exec bash"
+screen -dmS es-pf bash -c "kubectl get pods -n socialnetwork | grep socialnetwork-elasticsearch | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686; exec bash"
+screen -dmS jaeger-pf bash -c "./multiple_pod_running_check.sh 'socialnetwork' 'jaeger-query'; kubectl get pods -n socialnetwork | grep jaeger | awk '{print \$1}' | xargs -I {} kubectl port-forward {} 16686:16686; exec bash"
+echo "Created new screens to forward all ports"
 
 # Deploy and patch Metrics Server for autoscaling
 echo "----- DEPLOY METRICS SERVER -----"
