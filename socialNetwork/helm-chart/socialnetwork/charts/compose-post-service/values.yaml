@@ -7,6 +7,7 @@ ports:
 container:
   command: ComposePostService
   image: lewisrye/social-network-microservices
+  imageVersion: xenial
   name: compose-post-service
   ports: 
   - containerPort: 9090

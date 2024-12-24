@@ -7,6 +7,7 @@ ports:
 container:
   command: SocialGraphService
   image: lewisrye/social-network-microservices
+  imageVersion: xenial
   name: social-graph-service
   ports: 
   - containerPort: 9090

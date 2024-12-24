@@ -7,6 +7,7 @@ ports:
 container:
   command: UniqueIdService
   image: lewisrye/social-network-microservices
+  imageVersion: xenial
   name: unique-id-service
   ports: 
   - containerPort: 9090
