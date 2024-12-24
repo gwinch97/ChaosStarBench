@@ -6,7 +6,7 @@ ports:
 
 container:
   image: library/memcached
-  imageVersion: 1.6.7
+  imageVersion: 1.6.33
   name: user-memcached
   ports: 
   - containerPort: 11211

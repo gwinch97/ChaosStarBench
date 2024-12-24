@@ -7,7 +7,7 @@ ports:
 
 container:
   image: library/memcached
-  imageVersion: 1.6.7
+  imageVersion: 1.6.33
   name: post-storage-memcached
   ports: 
   - containerPort: 11211
