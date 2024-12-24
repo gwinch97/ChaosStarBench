@@ -20,41 +20,44 @@ A social network with unidirectional follow relationships, implemented with loos
 
 * Docker
 * Docker-compose
-* Python 3.5+ (`pip install asyncio` and `pip install aiohttp`)
-* libssl-dev (`apt-get install libssl-dev`)
-* libz-dev (`apt-get install libz-dev`)
-* luarocks (`apt-get install luarocks`)
-* luasocket (`luarocks install luasocket`)
+* Python 3.5+ (with `pip install asyncio` and `pip install aiohttp`)
+* libssl-dev (`sudo apt-get install libssl-dev`)
+* libz-dev (`sudo apt-get install libz-dev`)
+* luarocks (`sudo apt-get install luarocks`)
+* luasocket (`sudo luarocks install luasocket`)
 
 ## Running the social network application
 
 ### Before you start
 
-* Install Docker.
-* Make sure the following ports are available: port `8080` for Nginx frontend, `8081` for media frontend and `16686` for Jaeger.
+* Make sure the following ports are available:
+- `2333` for Chaos Mesh
+- `8080` for Nginx Frontend
+- `8081` for Media Frontend
+- `9090` for Prometheus
+- `9200` for Elasticsearch
+- `16686` for Jaeger
 
 ### Start containers on a minikube cluster using Kubernetes.
 
-Ensure that `pod_running_check.sh` has the required permissions
+Ensure that `pod_running_check.sh` and `multiple_pod_running_check.sh` have the required permissions
 ```bash
 chmod +x pod_running_check.sh
+chmod +x multiple_pod_running_check.sh
 ```
 
-Run the startup command 
+Run the startup command (ensure you select 2 or more for `nodes_total`)
 ```bash
 bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
 ```
+> A good starting point: `bash k8startup.sh 2 8000 2 1` *(scale up or down as necessary)*
 
-### Enable metrics-server for horizontal and vertical scaling
+### Enable metrics-server for automatic horizontal and vertical scaling
 
-> Only repeat this step if metrics API is not available
+> Only repeat this step if you are running `k8scale_auto.sh` **AND** MetricsAPI is not available
 ```bash
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-```
-
-```bash
-kubectl edit deploy metrics-server -n kube-system
-# - --kubelet-insecure-tls=true
+kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
 ```
 
 ### Register users and construct social graphs
@@ -141,7 +144,7 @@ start docker containers by running `docker-compose -f docker-compose-sharding.ym
 
 This application is still actively being developed, so keep an eye on the repo to stay up-to-date with recent changes.
 
-### Planned updates
+## Planned updates
 
 * Upgraded recommender
 * Upgraded search engine
