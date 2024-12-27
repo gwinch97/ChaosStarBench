@@ -1,6 +1,6 @@
 global: 
   replicas: 1
-  imagePullPolicy: "IfNotPresent"
+  imagePullPolicy: IfNotPresent
   restartPolicy: Always
   serviceType: ClusterIP
   dockerRegistry: docker.io

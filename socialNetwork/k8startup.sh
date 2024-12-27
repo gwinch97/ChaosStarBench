@@ -32,7 +32,41 @@ kubectl patch storageclass csi-hostpath-sc -p '{"metadata": {"annotations":{"sto
 
 # Create kubectl namespaces
 echo "----- CREATE KUBECTL NAMESPACES -----"
-bash k8setup.sh
+cd helm-chart
+if kubectl get namespace "socialnetwork" > /dev/null 2>&1; then
+	echo "Namespace socialnetwork exists"
+else
+	kubectl create namespace socialnetwork
+	kubectl config set-context --current --namespace=socialnetwork
+	helm install socialnetwork ./socialnetwork
+	echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
+	../multiple_pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
+	../multiple_pod_running_check.sh socialnetwork jaeger-collector
+	../multiple_pod_running_check.sh socialnetwork jaeger-query
+	echo "Namespace socialnetwork created"
+fi
+
+cd ../.. # back to ChaosStarBench folder
+if kubectl get namespace "monitoring" > /dev/null 2>&1; then
+	echo "Namespace monitoring exists"
+else
+	kubectl create namespace monitoring
+	kubectl config set-context --current --namespace=monitoring
+	helm install cadvisor ./cadvisor
+	helm install prometheus ./prometheus
+	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
+	echo "Namespace monitoring created"
+fi
+
+if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
+    echo "Namespace chaos-mesh exists"
+else
+	kubectl create namespace chaos-mesh
+	kubectl config set-context --current --namespace=chaos-mesh
+	helm install chaos-mesh ./chaos-mesh
+	echo "Namespace chaos-mesh created"
+fi
+cd socialNetwork
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
@@ -45,24 +79,21 @@ if [ "$n_inst" -gt 1 ]; then
 	done
 fi
 
-# Start required port-forwarding
-echo "----- PORT FORWARDING -----"
-
 # End all existing port forwarding screens
 SESSION_NAMES=("kube-tunnel" "chaos-pf" "jaeger-pf" "prom-pf" "es-pf")
 for SESSION_NAME in "${SESSION_NAMES[@]}"; do
     if screen -list | grep -q "\.${SESSION_NAME}"; then
         screen -X -S "$SESSION_NAME" quit
-		echo "Quit open screen $SESSION_NAME"
     fi
 done
 
-# Forward ports
+# Start required port-forwarding
+echo "----- PORT FORWARDING -----"
 screen -dmS kube-tunnel bash -c "minikube tunnel; exec bash"
 screen -dmS chaos-pf bash -c "./pod_running_check.sh 'chaos-mesh' 'chaos-dashboard'; kubectl get pods -n chaos-mesh | grep 'chaos-dashboard' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n chaos-mesh {} 2333:2333; exec bash"
 screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl get pods -n monitoring | grep 'prometheus-server' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n monitoring {} 9090:9090; exec bash"
 screen -dmS es-pf bash -c "kubectl get pods -n socialnetwork | grep 'socialnetwork-elasticsearch' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 9200:9200; exec bash"
-screen -dmS jaeger-pf bash -c "kubectl get pods -n socialnetwork | grep 'jaeger-query' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 16686:16686; exec bash"
+screen -dmS jaeger-pf bash -c "./pod_running_check.sh 'socialnetwork' 'jaeger-query'; kubectl get pods -n socialnetwork | grep 'jaeger-query' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 16686:16686; exec bash"
 echo "Created new screens to forward all ports"
 
 # Deploy and patch Metrics Server for autoscaling
@@ -72,3 +103,5 @@ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/late
 # Allow metrics server to run without TLS
 echo "----- PATCH METRICS SERVER -----"
 kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
+
+kubectl config set-context --current --namespace=socialnetwork
