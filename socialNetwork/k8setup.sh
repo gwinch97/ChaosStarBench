@@ -22,7 +22,6 @@ else
 	helm install cadvisor ./cadvisor
 	helm install prometheus ./prometheus
 	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
-	kubectl config set-context --current --namespace=default
 fi
 
 if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
