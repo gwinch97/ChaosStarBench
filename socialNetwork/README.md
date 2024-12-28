@@ -47,10 +47,9 @@ Make sure the following ports are available:
 
 ### Start containers on a minikube cluster using Kubernetes.
 
-Ensure that `pod_running_check.sh` and `multiple_pod_running_check.sh` have the required permissions
+Ensure that `pod_running_check.sh` has the required permissions
 ```bash
 chmod +x pod_running_check.sh
-chmod +x multiple_pod_running_check.sh
 ```
 
 Run the startup command (ensure you select 2 or more for `nodes_total`)

@@ -40,9 +40,9 @@ else
 	kubectl config set-context --current --namespace=socialnetwork
 	helm install socialnetwork ./socialnetwork
 	echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
-	../multiple_pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
-	../multiple_pod_running_check.sh socialnetwork jaeger-collector
-	../multiple_pod_running_check.sh socialnetwork jaeger-query
+	../pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
+	../pod_running_check.sh socialnetwork jaeger-collector
+	../pod_running_check.sh socialnetwork jaeger-query
 	echo "Namespace socialnetwork created"
 fi
 
@@ -90,10 +90,10 @@ done
 # Start required port-forwarding
 echo "----- PORT FORWARDING -----"
 screen -dmS kube-tunnel bash -c "minikube tunnel; exec bash"
-screen -dmS chaos-pf bash -c "./pod_running_check.sh 'chaos-mesh' 'chaos-dashboard'; kubectl get pods -n chaos-mesh | grep 'chaos-dashboard' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n chaos-mesh {} 2333:2333; exec bash"
-screen -dmS prom-pf bash -c "./pod_running_check.sh 'monitoring' 'prometheus-server'; kubectl get pods -n monitoring | grep 'prometheus-server' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n monitoring {} 9090:9090; exec bash"
+screen -dmS chaos-pf bash -c "./pod_running_check.sh chaos-mesh chaos-dashboard; kubectl get pods -n chaos-mesh | grep 'chaos-dashboard' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n chaos-mesh {} 2333:2333; exec bash"
+screen -dmS prom-pf bash -c "./pod_running_check.sh monitoring prometheus-server; kubectl get pods -n monitoring | grep 'prometheus-server' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n monitoring {} 9090:9090; exec bash"
 screen -dmS es-pf bash -c "kubectl get pods -n socialnetwork | grep 'socialnetwork-elasticsearch' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 9200:9200; exec bash"
-screen -dmS jaeger-pf bash -c "./pod_running_check.sh 'socialnetwork' 'jaeger-query'; kubectl get pods -n socialnetwork | grep 'jaeger-query' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 16686:16686; exec bash"
+screen -dmS jaeger-pf bash -c "./pod_running_check.sh socialnetwork jaeger-query; kubectl get pods -n socialnetwork | grep 'jaeger-query' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 16686:16686; exec bash"
 echo "Created new screens to forward all ports"
 
 # Deploy and patch Metrics Server for autoscaling
