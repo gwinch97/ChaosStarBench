@@ -18,10 +18,16 @@ A social network with unidirectional follow relationships, implemented with loos
 
 ## Pre-requirements
 
-* Docker
-* Docker-compose
-* Helm
-* Python 3.5+ (with `pip install asyncio` and `pip install aiohttp`)
+* [Docker](https://docs.docker.com/engine/install/)
+* [Helm](https://helm.sh/docs/intro/quickstart/)
+* [kubectl](https://kubernetes.io/docs/tasks/tools/)
+* [Minikube](https://minikube.sigs.k8s.io/docs/start/)
+* Python 3.5+ with the following packages:
+    * asyncio (`pip install asyncio`)
+    * aiohttp (`pip install aiohttp`)
+    * elasticsearch (`pip install elasticsearch`)
+    * kubernetes (`pip install kubernetes`)
+    * requests (`pip install requests`)
 * screen (`sudo apt-get install screen`)
 * libssl-dev (`sudo apt-get install libssl-dev`)
 * libz-dev (`sudo apt-get install libz-dev`)
@@ -35,7 +41,6 @@ A social network with unidirectional follow relationships, implemented with loos
 Make sure the following ports are available:
 - `2333` for Chaos Mesh
 - `8080` for Nginx Frontend
-- `8081` for Media Frontend
 - `9090` for Prometheus
 - `9200` for Elasticsearch
 - `16686` for Jaeger
@@ -54,14 +59,6 @@ bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
 ```
 > A good starting point: `bash k8startup.sh 2 8000 2 1` *(scale up or down as necessary)*
 
-### Enable metrics-server for automatic horizontal and vertical scaling
-
-> Only repeat this step if you are running `k8scale_auto.sh` **AND** MetricsAPI is not available
-```bash
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
-```
-
 ### Register users and construct social graphs
 
 Register users and construct social graph by running: 
@@ -72,15 +69,10 @@ It will initialize a social graph from a small social network [Reed98 Facebook N
 
 ### Running HTTP workload generator
 
-#### Run Make
-
+>Before starting, you must compile wrk2
 ```bash
 cd ../wrk2
 make
-```
-
-#### Back to socialNetwork
-```bash
 cd ../socialNetwork
 ```
 
@@ -103,7 +95,8 @@ cd ../socialNetwork
 ```
 
 #### View Jaeger traces
-View Jaeger traces by accessing `http://localhost:16686`
+
+You can view Jaeger's frontend using `http://localhost:16686`, or you can download all traces through elasticsearch by running `download_traces.py`.
 
 Example of a Jaeger trace for a compose post request:
 
@@ -140,7 +133,15 @@ must turn on TLS manually by modifing `config/mongod.conf`, `config/redis.conf`,
 
 ## Enable Redis Sharding
 
-start docker containers by running `docker-compose -f docker-compose-sharding.yml up -d` to enable cache and DB sharding. Currently only Redis sharding is available.
+Start docker containers by running `docker-compose -f docker-compose-sharding.yml up -d` to enable cache and DB sharding. Currently only Redis sharding is available.
+
+## MetricsAPI is not available?
+
+> Only repeat this step if you are running `k8scale_auto.sh`!
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
+```
 
 ## Development Status
 
