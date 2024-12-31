@@ -16,13 +16,17 @@ PROM_PORT = 9090
 
 # QUERY SPECIFIC VARIABLES
 # rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])
+# rate(container_cpu_cfs_throttled_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])
 OUTPUT_FILE = "temp.json"
-PROM_CPU_QUERY = f"http://{IP_ADDRESS}:{PROM_PORT}/api/v1/query?query=container_cpu_usage_seconds_total{{namespace='socialnetwork', pod=~'.*service.*'}}[1m]"
+PROM_CPU_UTILISATION = f"http://{IP_ADDRESS}:{PROM_PORT}/api/v1/query?query=container_cpu_usage_seconds_total{{namespace='socialnetwork', pod=~'.*service.*'}}[1m]"
+PROM_CPU_THROTTLING = f"http://{IP_ADDRESS}:{PROM_PORT}/api/v1/query?query=container_cpu_cfs_throttled_seconds_total{{namespace='socialnetwork', pod=~'.*service.*'}}[1m]"
 
 # SCALING SPECIFIC SETTINGS
-SCALE_DOWN_THRESHOLD = 40.0  # cpu usage % when you need to scale down
+SCALE_DOWN_THRESHOLD_UTILISATION = 40.0  # cpu usage % when you need to scale down
+SCALE_DOWN_THRESHOLD_THROTTLING = 40.0  # cpu throttle % when you need to scale down
 SCALE_DOWN_GRACE_PERIOD = 30  # time in seconds between staying at the threshold and scaling down
-SCALE_UP_THRESHOLD = 85.0  # cpu usage % when you need to scale up
+SCALE_UP_THRESHOLD_UTILISATION = 85.0  # cpu usage % when you need to scale up
+SCALE_UP_THRESHOLD_THROTTLING = 85.0  # cpu throttling % when you need to scale up
 SCALE_UP_GRACE_PERIOD = 5  # time in seconds between staying at the threshold and scaling up
 AFTER_GRACE_PERIOD = 30  # time in seconds after scaling to wait before scaling again
 MINIMUM_INSTANCES = 1  # min amount of instances of each service
@@ -39,17 +43,17 @@ autoscale_api = client.AutoscalingV1Api()
 threads = []
 
 # DICT OF SERVICE INFORMATION
-services = {"post-storage-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "user-mention-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "user-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "unique-id-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "media-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "social-graph-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "url-shorten-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "compose-post-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "user-timeline-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "home-timeline-service": {"duration": 0, "cpu": 0.0, "instances": 1},
-            "text-service": {"duration": 0, "cpu": 0.0, "instances": 1}}
+services = {"post-storage-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "user-mention-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "user-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "unique-id-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "media-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "social-graph-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "url-shorten-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "compose-post-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "user-timeline-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "home-timeline-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,"instances": 1},
+            "text-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1}}
 
 
 def main():
@@ -120,19 +124,17 @@ def start_scaling():
         # Initialize Elasticsearch
         es = Elasticsearch([{'host': IP_ADDRESS, 'port': ELASTICSEARCH_PORT, 'scheme': 'http'}])
         index_pattern = "jaeger-span-*"
+        scroll = '2m'
+        batch_size = 500
 
         while True:
             # GET JAEGER TRACE LATENCY
-            # Initialize the scroll
-            scroll = '2m'
-            batch_size = 500
-
             # Get epoch time 15 seconds ago (in milliseconds)
             epoch_time_10s_ago = int(time.time() - 10) * 1000
 
             # Initialize the query to match traces based on the startTimeMillis field
             query = {
-                "_source": ["process.serviceName", "duration"],  # Adjust based on your fields
+                "_source": ["process.serviceName", "duration"],
                 "query": {
                     "range": {
                         "startTimeMillis": {
@@ -169,14 +171,14 @@ def start_scaling():
                         json.dump(trace, f)
                     f.write(']')
 
-                # TODO: Make it such that the latency average is sent to the services dict
+                # TODO: Make it such that the latency average is sent to the services dictionary
 
             # GET PROMETHEUS CPU USAGE
-            response = requests.get(PROM_CPU_QUERY)
+            response = requests.get(PROM_CPU_UTILISATION)
             metrics = response.json()["data"]["result"]
 
             for service_name in services:  # reset all usage back to 0
-                services[service_name]['cpu'] = 0.0
+                services[service_name]['cpu_utilisation'] = 0.0
 
             for metric in metrics:
                 pod = metric["metric"]["pod"]  # pod name
@@ -184,31 +186,51 @@ def start_scaling():
 
                 cpu_usage = float(values[-1][1])  # get most recent value
 
-                if services[remove_hex_code(pod)]['cpu'] > 0.0:
-                    services[remove_hex_code(pod)]['cpu'] = (services[remove_hex_code(pod)]['cpu'] + cpu_usage) / 2 # avg
+                if services[remove_hex_code(pod)]['cpu_utilisation'] > 0.0:
+                    services[remove_hex_code(pod)]['cpu_utilisation'] = (services[remove_hex_code(pod)]['cpu_utilisation'] + cpu_usage) / 2 # avg
                 else:
-                    services[remove_hex_code(pod)]['cpu'] = cpu_usage
+                    services[remove_hex_code(pod)]['cpu_utilisation'] = cpu_usage
+
+            # GET PROMETHEUS CPU THROTTLING
+            response = requests.get(PROM_CPU_THROTTLING)
+            metrics = response.json()["data"]["result"]
+
+            for service_name in services:  # reset all usage back to 0
+                services[service_name]['cpu_throttling'] = 0.0
+
+            for metric in metrics:
+                pod = metric["metric"]["pod"]  # pod name
+                values = metric["values"]  # pod usage as [timestamp, value]
+
+                cpu_throttling = float(values[-1][1])  # get most recent value
+
+                if services[remove_hex_code(pod)]['cpu_throttling'] > 0.0:
+                    services[remove_hex_code(pod)]['cpu_throttling'] = (services[remove_hex_code(pod)][
+                                                                             'cpu_throttling'] + cpu_throttling) / 2  # avg
+                else:
+                    services[remove_hex_code(pod)]['cpu_throttling'] = cpu_throttling
 
             print("--------------------------------------------------")
             for service_name in services.keys():
                 # print the data into a table
                 print(f"{service_name:<{30}}"
-                      f"| LATENCY: {f'{float(services[service_name]["duration"]):.2f}ms':<{10}}"
-                      f"| CPU: {f'{float(services[service_name]['cpu']):.2f}%':<{8}}")
+                      f"| RESPONSE TIME: {f'{float(services[service_name]["response_time"]):.2f}ms':<{10}}"
+                      f"| CPU UTILISATION: {f'{float(services[service_name]['cpu_utilisation']):.2f}%':<{8}}"
+                      f"| CPU THROTTLING: {f'{float(services[service_name]["cpu_throttling"]):.2f}%':<{8}}")
 
                 # check if you need to scale the service
                 # based on whether you are allowed to add or remove instances
                 # and whether they are already attempting to scale
                 if (services[service_name]['instances'] < MAXIMUM_INSTANCES
                         and service_name not in threads
-                        and float(services[service_name]['cpu']) > (
-                                SCALE_UP_THRESHOLD * services[service_name]['instances'])):
+                        and float(services[service_name]['cpu_utilisation']) > (
+                                SCALE_UP_THRESHOLD_UTILISATION * services[service_name]['instances'])):
                     thread = threading.Thread(target=scale_up, args=(service_name,), name=f"{service_name}")
                     threads.append(f"{service_name}")
                     thread.start()
                 elif (services[service_name]['instances'] > MINIMUM_INSTANCES
                       and service_name not in threads
-                      and float(services[service_name]['cpu']) < SCALE_DOWN_THRESHOLD):
+                      and float(services[service_name]['cpu_utilisation']) < SCALE_DOWN_THRESHOLD_UTILISATION):
                     thread = threading.Thread(target=scale_down, args=(service_name,), name=f"{service_name}")
                     threads.append(f"{service_name}")
                     thread.start()
@@ -228,12 +250,12 @@ def start_scaling():
 
 def scale_up(service_name):
     # for debugging
-    # print(f"{service_name} hit >{SCALE_UP_THRESHOLD}% CPU")
+    # print(f"{service_name} hit >{SCALE_UP_THRESHOLD_UTILISATION}% CPU")
     # print(f"Checking if it is a good idea to scale up on thread '{threading.current_thread().name}'.")
 
     time.sleep(SCALE_UP_GRACE_PERIOD)  # check after grace period before scaling
 
-    if float(services[service_name]['cpu']) > SCALE_UP_THRESHOLD:
+    if float(services[service_name]['cpu_utilisation']) > SCALE_UP_THRESHOLD_UTILISATION:
         # scale up
         deployment = apps_api.read_namespaced_deployment(name=service_name, namespace='socialnetwork')
         deployment.spec.replicas = services[service_name]['instances'] + 1
@@ -254,12 +276,12 @@ def scale_up(service_name):
 
 def scale_down(service_name):
     # for debugging
-    # print(f"{service_name} hit <{SCALE_DOWN_THRESHOLD}% CPU")
+    # print(f"{service_name} hit <{SCALE_DOWN_THRESHOLD_UTILISATION}% CPU")
     # print(f"Checking if it is a good idea to scale down on thread '{threading.current_thread().name}'.")
 
     time.sleep(SCALE_DOWN_GRACE_PERIOD)  # check after grace period before scaling
 
-    if float(services[service_name]['cpu']) < SCALE_DOWN_THRESHOLD:
+    if float(services[service_name]['cpu_utilisation']) < SCALE_DOWN_THRESHOLD_UTILISATION:
         # scale down
         deployment = apps_api.read_namespaced_deployment(name=service_name, namespace='socialnetwork')
         deployment.spec.replicas = services[service_name]['instances'] - 1
