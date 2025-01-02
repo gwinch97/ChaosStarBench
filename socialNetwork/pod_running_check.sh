@@ -31,4 +31,3 @@ pod_ready_check() {
 }
 
 pod_ready_check "$1" "$2"
-
