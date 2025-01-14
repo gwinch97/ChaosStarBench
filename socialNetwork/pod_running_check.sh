@@ -25,8 +25,8 @@ pod_ready_check() {
             break
         fi
         
-        echo "Waiting for all pods matching '$pod_name_pattern' in namespace '$namespace' to be fully ready..."
-        sleep 15
+        echo "Waiting for all '$pod_name_pattern' pods in namespace '$namespace' to be ready..."
+        sleep 10
     done
 }
 

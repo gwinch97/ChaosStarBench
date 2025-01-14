@@ -1,12 +1,13 @@
-import json
+"""This file runs an autoscaling algorithm for the Social Network Kubernetes deployment"""
+
 import os
 import threading
 import time
 
 import requests
-from elasticsearch import Elasticsearch, helpers
 from kubernetes import client, config
 from kubernetes.client import ApiException
+from elasticsearch import Elasticsearch, helpers
 
 # GET DEPLOYMENT IP AND PORTS
 IP_ADDRESS = "127.0.0.1"
@@ -34,7 +35,6 @@ MAXIMUM_INSTANCES = 5  # max amount of instances of each service
 
 # KUBERNETES APIS
 config.load_kube_config()
-
 core_api = client.CoreV1Api()
 apps_api = client.AppsV1Api()
 autoscale_api = client.AutoscalingV1Api()
@@ -43,23 +43,22 @@ autoscale_api = client.AutoscalingV1Api()
 running_threads = []
 
 # DICT OF SERVICE INFORMATION
-services = {"post-storage-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-            "user-mention-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-            "user-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-            "unique-id-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-            "media-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-            "social-graph-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-            "url-shorten-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-            "compose-post-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-            "user-timeline-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,
-                                      "instances": 1},
-            "home-timeline-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0,
-                                      "instances": 1},
-            "text-service": {"response_time": 0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1}}
+services = {
+    "post-storage-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "user-mention-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "user-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "unique-id-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "media-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "social-graph-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "url-shorten-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "compose-post-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "user-timeline-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "home-timeline-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
+    "text-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1}}
 
 
 def main():
-    print("Running Autoscaling Script")
+    """Running Autoscaling Script"""
 
     # disable HPA and replicas to ensure you can scale with custom metrics
     disable_hpa("socialnetwork")
@@ -70,10 +69,12 @@ def main():
 
 
 def remove_hex_code(pod_name):
+    """Takes a K8 pod name, like 'compose-post-service-12fd5' and returns 'compose-post-service'"""
     return "-".join(pod_name.split("-")[:-2])
 
 
 def disable_hpa(namespace):
+    """Attempts to disable any other algorithms that may conflict with this application"""
     try:
         pods = core_api.list_namespaced_pod(namespace=namespace).items
 
@@ -83,10 +84,7 @@ def disable_hpa(namespace):
 
             try:
                 # disable HPA for every service to ensure there are no conflicts with this script
-                autoscale_api.delete_namespaced_horizontal_pod_autoscaler(
-                    name=resource_name,
-                    namespace=namespace,
-                )
+                autoscale_api.delete_namespaced_horizontal_pod_autoscaler(name=resource_name, namespace=namespace, )
             except ApiException:
                 pass
 
@@ -95,6 +93,7 @@ def disable_hpa(namespace):
 
 
 def disable_replicas(namespace):
+    """Attempts to get all pods back to 1 instance before running the scaling algorithm"""
     try:
         pods = core_api.list_namespaced_pod(namespace=namespace).items
         for pod in pods:
@@ -103,17 +102,10 @@ def disable_replicas(namespace):
 
             try:
                 # remove all replicas
-                deployment = apps_api.read_namespaced_deployment(
-                    name=resource_name,
-                    namespace=namespace
-                )
+                deployment = apps_api.read_namespaced_deployment(name=resource_name, namespace=namespace)
                 deployment.spec.replicas = 1
                 # apply replica reduction
-                apps_api.patch_namespaced_deployment(
-                    name=resource_name,
-                    namespace=namespace,
-                    body=deployment
-                )
+                apps_api.patch_namespaced_deployment(name=resource_name, namespace=namespace, body=deployment)
             except ApiException:
                 pass
 
@@ -122,6 +114,7 @@ def disable_replicas(namespace):
 
 
 def autoscale():
+    """Runs the autoscale algorithm on a loop"""
     try:
         # Initialize Elasticsearch
         es = Elasticsearch([{'host': IP_ADDRESS, 'port': ELASTICSEARCH_PORT, 'scheme': 'http'}])
@@ -135,48 +128,27 @@ def autoscale():
             epoch_time_10s_ago = int(time.time() - 10) * 1000
 
             # Initialize the query to match traces based on the startTimeMillis field
-            query = {
-                "_source": ["process.serviceName", "duration"],
-                "query": {
-                    "range": {
-                        "startTimeMillis": {
-                            "gte": epoch_time_10s_ago
-                        }
-                    }
-                }
-            }
+            query = {"_source": ["process.serviceName", "duration"],
+                     "query": {"range": {"startTimeMillis": {"gte": epoch_time_10s_ago}}}}
 
             total = es.count(index=index_pattern, body={"query": query['query']})['count']
 
             if total != 0:
-                scroll_gen = helpers.scan(
-                    client=es,
-                    index=index_pattern,
-                    query=query,
-                    scroll=scroll,
-                    size=batch_size,
-                    preserve_order=False
-                )
+                scroll_gen = helpers.scan(client=es, index=index_pattern, query=query, scroll=scroll, size=batch_size,
+                                          preserve_order=False)
 
-                # Open the output file
-                with open(OUTPUT_FILE, 'w') as f:
-                    f.write('[')
-                    first = True
-                    for doc in scroll_gen:
-                        trace = doc['_source']
-
-                        if not first:
-                            f.write(',\n')
-                        else:
-                            first = False
-
-                        json.dump(trace, f)
-                    f.write(']')
-
-                # TODO: Make it such that the latency average is sent to the services dictionary
+                for doc in scroll_gen:
+                    trace = doc['_source']
+                    service_name = trace['process']['serviceName']
+                    duration = trace['duration']
+                    if services[service_name]['response_time'] == 0.0:
+                        services[service_name]['response_time'] = duration / 1000
+                    else:
+                        services[service_name]['response_time'] = (services[service_name][
+                                                                       'response_time'] + (duration / 1000)) / 2
 
             # GET PROMETHEUS CPU USAGE
-            response = requests.get(PROM_CPU_UTILISATION)
+            response = requests.get(url=PROM_CPU_UTILISATION, timeout=10)
             metrics = response.json()["data"]["result"]
 
             for metric in metrics:
@@ -191,7 +163,7 @@ def autoscale():
                     services[pod]['cpu_utilisation'] = (services[pod]['cpu_utilisation'] + cpu_usage) / 2  # avg
 
             # GET PROMETHEUS CPU THROTTLING
-            response = requests.get(PROM_CPU_THROTTLING)
+            response = requests.get(url=PROM_CPU_THROTTLING, timeout=10)
             metrics = response.json()["data"]["result"]
 
             for metric in metrics:
@@ -206,11 +178,11 @@ def autoscale():
                     services[pod]['cpu_throttling'] = (services[pod]['cpu_throttling'] + cpu_throttling) / 2  # avg
 
             print("--------------------------------------------------")
-            for service_name in services.keys():
-                instances = services[service_name]["instances"]
-                cpu_util = float(services[service_name]['cpu_utilisation'])
-                cpu_throttling = float(services[service_name]['cpu_throttling'])
-                response_time = float(services[service_name]["response_time"])
+            for service_name, service_data in services.items():
+                instances = service_data["instances"]
+                cpu_util = float(service_data['cpu_utilisation'])
+                cpu_throttling = float(service_data['cpu_throttling'])
+                response_time = float(service_data["response_time"])
 
                 # print the data into a table
                 print(f"{service_name:<{22}}"
@@ -222,21 +194,18 @@ def autoscale():
                 # check if you need to scale the service
                 # based on whether you are allowed to add or remove instances
                 # and whether they are already attempting to scale
-                if services[service_name]['instances'] < MAXIMUM_INSTANCES and service_name not in running_threads:
-                    max_cpu_util = SCALE_UP_THRESHOLD_UTILISATION * services[service_name]['instances']
+                if service_data['instances'] < MAXIMUM_INSTANCES and service_name not in running_threads:
+                    max_cpu_util = SCALE_UP_THRESHOLD_UTILISATION * service_data['instances']
 
-                    should_scale_up = (
-                            cpu_util > max_cpu_util or cpu_throttling > SCALE_UP_THRESHOLD_THROTTLING
-                    )
+                    should_scale_up = (cpu_util > max_cpu_util or cpu_throttling > SCALE_UP_THRESHOLD_THROTTLING)
 
                     if should_scale_up:
                         thread = threading.Thread(target=scale_up, args=(service_name,), name=f"{service_name}")
                         running_threads.append(f"{service_name}")
                         thread.start()
-                elif services[service_name]['instances'] > MINIMUM_INSTANCES and service_name not in running_threads:
+                elif service_data['instances'] > MINIMUM_INSTANCES and service_name not in running_threads:
                     should_scale_down = (
-                            cpu_util < SCALE_DOWN_THRESHOLD_UTILISATION and cpu_throttling < SCALE_DOWN_THRESHOLD_THROTTLING
-                    )
+                            cpu_util < SCALE_DOWN_THRESHOLD_UTILISATION and cpu_throttling < SCALE_DOWN_THRESHOLD_THROTTLING)
 
                     if should_scale_down:
                         thread = threading.Thread(target=scale_down, args=(service_name,), name=f"{service_name}")
@@ -259,6 +228,7 @@ def autoscale():
 
 
 def scale_up(service_name):
+    """Scales up the given service"""
     time.sleep(SCALE_UP_GRACE_PERIOD)  # check after grace period before scaling
 
     cpu_util = float(services[service_name]['cpu_utilisation'])
@@ -270,11 +240,7 @@ def scale_up(service_name):
         deployment.spec.replicas = services[service_name]['instances'] + 1
 
         # scale up
-        apps_api.patch_namespaced_deployment(
-            name=service_name,
-            namespace='socialnetwork',
-            body=deployment
-        )
+        apps_api.patch_namespaced_deployment(name=service_name, namespace='socialnetwork', body=deployment)
 
         services[service_name]['instances'] += 1  # update the number of instances in the service list
         print(f"↑ {service_name} scaled UP to {services[service_name]['instances']} instance(s)")
@@ -284,6 +250,7 @@ def scale_up(service_name):
 
 
 def scale_down(service_name):
+    """Scales down the given service"""
     time.sleep(SCALE_DOWN_GRACE_PERIOD)  # check after grace period before scaling
 
     cpu_util = float(services[service_name]['cpu_utilisation'])
@@ -295,11 +262,7 @@ def scale_down(service_name):
         deployment.spec.replicas = services[service_name]['instances'] - 1
 
         # scale up
-        apps_api.patch_namespaced_deployment(
-            name=service_name,
-            namespace='socialnetwork',
-            body=deployment
-        )
+        apps_api.patch_namespaced_deployment(name=service_name, namespace='socialnetwork', body=deployment)
 
         services[service_name]['instances'] -= 1  # update the number of instances in the service list
         print(f"↓ {service_name} scaled DOWN to {services[service_name]['instances']} instance(s)")
