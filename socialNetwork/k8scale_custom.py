@@ -139,7 +139,11 @@ def autoscale():
             query = {"_source": ["process.serviceName", "duration"],
                      "query": {"range": {"startTimeMillis": {"gte": epoch_time_10s_ago}}}}
 
-            total = es.count(index=index_pattern, body={"query": query['query']})['count']
+            try:
+                total = es.count(index=index_pattern, body={"query": query['query']})['count']
+            except Exception:
+                print("Unable to query Jaeger response time")
+                total = 0
 
             if total != 0:
                 scroll_gen = helpers.scan(client=es, index=index_pattern, query=query, scroll=scroll, size=batch_size,
@@ -152,9 +156,13 @@ def autoscale():
                     services[service_name]['response_time'] = add_to_list(duration_milliseconds, services[service_name]['response_time'])
 
             # GET PROMETHEUS CPU USAGE
-            response = requests.get(url=PROM_CPU_UTILISATION, timeout=10)
-            metrics = response.json()["data"]["result"]
-
+            try:
+                response = requests.get(url=PROM_CPU_UTILISATION, timeout=10)
+                metrics = response.json()["data"]["result"]
+            except Exception:
+                print("Unable to query Prometheus CPU utilisation")
+                metrics = []
+            
             for metric in metrics:
                 service_name = remove_hex_code(metric["metric"]["pod"])  # pod name
                 values = metric["values"]  # pod usage as [timestamp, value]
@@ -162,8 +170,12 @@ def autoscale():
                 services[service_name]['cpu_utilisation'] = add_to_list(cpu_usage, services[service_name]['cpu_utilisation'])
 
             # GET PROMETHEUS CPU THROTTLING
-            response = requests.get(url=PROM_CPU_THROTTLING, timeout=10)
-            metrics = response.json()["data"]["result"]
+            try:
+                response = requests.get(url=PROM_CPU_THROTTLING, timeout=10)
+                metrics = response.json()["data"]["result"]
+            except Exception:
+                print("Unable to query Prometheus CPU throttling")
+                metrics = []
 
             for metric in metrics:
                 service_name = remove_hex_code(metric["metric"]["pod"])  # pod name
