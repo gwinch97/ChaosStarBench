@@ -42,19 +42,19 @@ autoscale_api = client.AutoscalingV1Api()
 # LIST OF RUNNING THREADS
 running_threads = []
 
-# DICT OF SERVICE INFORMATION
+# DICTIONARY OF SERVICE INFORMATION
 services = {
-    "post-storage-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "user-mention-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "user-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "unique-id-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "media-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "social-graph-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "url-shorten-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "compose-post-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "user-timeline-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "home-timeline-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1},
-    "text-service": {"response_time": 0.0, "cpu_utilisation": 0.0, "cpu_throttling": 0.0, "instances": 1}}
+    "post-storage-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "user-mention-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "user-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "unique-id-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "media-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "social-graph-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "url-shorten-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "compose-post-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "user-timeline-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "home-timeline-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
+    "text-service": {"response_time": [0.0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1}}
 
 
 def main():
@@ -69,8 +69,16 @@ def main():
 
 
 def remove_hex_code(pod_name):
-    """Takes a K8 pod name, like 'compose-post-service-12fd5' and returns 'compose-post-service'"""
+    """Takes the name of a pod, like 'compose-post-service-12fd5', and returns 'compose-post-service'"""
     return "-".join(pod_name.split("-")[:-2])
+
+
+def add_to_list(item, existing_list):
+    """Takes the existing list of services and appends the new metric at the beginning"""
+    new_list = [item] + existing_list[:11] # first 11 items in old list
+    # this list contains 12 items, and each item is 1 timestep
+    # therefore this list is the previous 120 seconds of performance metrics
+    return new_list
 
 
 def disable_hpa(namespace):
@@ -140,49 +148,35 @@ def autoscale():
                 for doc in scroll_gen:
                     trace = doc['_source']
                     service_name = trace['process']['serviceName']
-                    duration = trace['duration']
-                    if services[service_name]['response_time'] == 0.0:
-                        services[service_name]['response_time'] = duration / 1000
-                    else:
-                        services[service_name]['response_time'] = (services[service_name][
-                                                                       'response_time'] + (duration / 1000)) / 2
+                    duration_milliseconds = trace['duration'] / 1000
+                    services[service_name]['response_time'] = add_to_list(duration_milliseconds, services[service_name]['response_time'])
 
             # GET PROMETHEUS CPU USAGE
             response = requests.get(url=PROM_CPU_UTILISATION, timeout=10)
             metrics = response.json()["data"]["result"]
 
             for metric in metrics:
-                pod = remove_hex_code(metric["metric"]["pod"])  # pod name
+                service_name = remove_hex_code(metric["metric"]["pod"])  # pod name
                 values = metric["values"]  # pod usage as [timestamp, value]
-
                 cpu_usage = float(values[-1][1])  # get most recent value
-
-                if services[pod]['cpu_utilisation'] == 0.0:  # should only be 0 on the first run
-                    services[pod]['cpu_utilisation'] = cpu_usage
-                else:
-                    services[pod]['cpu_utilisation'] = (services[pod]['cpu_utilisation'] + cpu_usage) / 2  # avg
+                services[service_name]['cpu_utilisation'] = add_to_list(cpu_usage, services[service_name]['cpu_utilisation'])
 
             # GET PROMETHEUS CPU THROTTLING
             response = requests.get(url=PROM_CPU_THROTTLING, timeout=10)
             metrics = response.json()["data"]["result"]
 
             for metric in metrics:
-                pod = remove_hex_code(metric["metric"]["pod"])  # pod name
-                values = metric["values"]  # pod usage as [timestamp, value]
-
+                service_name = remove_hex_code(metric["metric"]["pod"])  # pod name
+                values = metric["values"]  # pod throttling as [timestamp, value]
                 cpu_throttling = float(values[-1][1])  # get most recent value
-
-                if services[pod]['cpu_throttling'] == 0.0:  # should only be 0 on the first run
-                    services[pod]['cpu_throttling'] = cpu_throttling
-                else:
-                    services[pod]['cpu_throttling'] = (services[pod]['cpu_throttling'] + cpu_throttling) / 2  # avg
+                services[service_name]['cpu_throttling'] = add_to_list(cpu_throttling, services[service_name]['cpu_throttling'])
 
             print("--------------------------------------------------")
             for service_name, service_data in services.items():
                 instances = service_data["instances"]
-                cpu_util = float(service_data['cpu_utilisation'])
-                cpu_throttling = float(service_data['cpu_throttling'])
-                response_time = float(service_data["response_time"])
+                cpu_util = float(service_data['cpu_utilisation'][0])
+                cpu_throttling = float(service_data['cpu_throttling'][0])
+                response_time = float(service_data["response_time"][0])
 
                 # print the data into a table
                 print(f"{service_name:<{22}}"
@@ -231,15 +225,15 @@ def scale_up(service_name):
     """Scales up the given service"""
     time.sleep(SCALE_UP_GRACE_PERIOD)  # check after grace period before scaling
 
-    cpu_util = float(services[service_name]['cpu_utilisation'])
-    cpu_throttling = float(services[service_name]['cpu_throttling'])
+    cpu_util = float(services[service_name]['cpu_utilisation'][0])
+    cpu_throttling = float(services[service_name]['cpu_throttling'][0])
 
     if cpu_util > SCALE_UP_THRESHOLD_UTILISATION or cpu_throttling > SCALE_UP_THRESHOLD_THROTTLING:
-        # scale up
+        # read namespace
         deployment = apps_api.read_namespaced_deployment(name=service_name, namespace='socialnetwork')
         deployment.spec.replicas = services[service_name]['instances'] + 1
 
-        # scale up
+        # patch namespace
         apps_api.patch_namespaced_deployment(name=service_name, namespace='socialnetwork', body=deployment)
 
         services[service_name]['instances'] += 1  # update the number of instances in the service list
@@ -253,15 +247,15 @@ def scale_down(service_name):
     """Scales down the given service"""
     time.sleep(SCALE_DOWN_GRACE_PERIOD)  # check after grace period before scaling
 
-    cpu_util = float(services[service_name]['cpu_utilisation'])
-    cpu_throttling = float(services[service_name]['cpu_throttling'])
+    cpu_util = float(services[service_name]['cpu_utilisation'][0])
+    cpu_throttling = float(services[service_name]['cpu_throttling'][0])
 
     if cpu_util < SCALE_DOWN_THRESHOLD_UTILISATION and cpu_throttling < SCALE_DOWN_THRESHOLD_THROTTLING:
-        # scale down
+        # read namespace
         deployment = apps_api.read_namespaced_deployment(name=service_name, namespace='socialnetwork')
         deployment.spec.replicas = services[service_name]['instances'] - 1
 
-        # scale up
+        # patch namespace
         apps_api.patch_namespaced_deployment(name=service_name, namespace='socialnetwork', body=deployment)
 
         services[service_name]['instances'] -= 1  # update the number of instances in the service list

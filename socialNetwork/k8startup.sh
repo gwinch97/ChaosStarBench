@@ -5,11 +5,13 @@ mem=$2
 n_nodes=$3
 n_inst=$4
 
+if [ "$n_nodes" -lt 2 ]; then
+	echo "ERROR: running socialnetwork with less than 2 nodes causes instability"
+	exit 0
+fi
+
 # Startup minikube cluster
 echo "----- START MINIKUBE -----"
-if [ "$n_nodes" -lt 2 ]; then
-	echo "WARNING: running socialnetwork with less than 2 nodes may cause instability"
-fi
 
 status=$(minikube status --format='{{.Host}}')
 
