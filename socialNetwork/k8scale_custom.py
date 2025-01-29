@@ -152,8 +152,8 @@ def autoscale():
                 for doc in scroll_gen:
                     trace = doc['_source']
                     service_name = trace['process']['serviceName']
-                    duration_milliseconds = trace['duration'] / 1000
-                    services[service_name]['response_time'] = add_to_list(duration_milliseconds, services[service_name]['response_time'])
+                    duration_microseconds = trace['duration']
+                    services[service_name]['response_time'] = add_to_list(duration_microseconds, services[service_name]['response_time'])
 
             # GET PROMETHEUS CPU USAGE
             try:
@@ -195,7 +195,7 @@ def autoscale():
                       f"| INSTANCES: {f'{instances}x':<{3}}"
                       f"| UTILISATION: {f'{cpu_util:.2f}%':<{8}}"
                       f"| THROTTLING: {f'{cpu_throttling:.2f}%':<{8}}"
-                      f"| RESPONSE TIME: {f'{response_time:.2f}ms':<{10}}")
+                      f"| RESPONSE TIME: {f'{response_time:.2f}µs':<{10}}")
 
                 # check if you need to scale the service
                 # based on whether you are allowed to add or remove instances
