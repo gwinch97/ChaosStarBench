@@ -32,7 +32,7 @@ minikube addons enable csi-hostpath-driver
 echo "----- PATCH STORAGECLASS -----"
 kubectl patch storageclass csi-hostpath-sc -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 
-# Create kubectl namespaces
+# Create kubectl namespaces and install helm charts to them
 echo "----- CREATE KUBECTL NAMESPACES -----"
 cd helm-chart
 if kubectl get namespace "socialnetwork" > /dev/null 2>&1; then
@@ -49,14 +49,14 @@ else
 fi
 
 cd ../.. # back to ChaosStarBench folder
-if kubectl get namespace "monitoring" > /dev/null 2>&1; then
-	echo "Namespace monitoring exists"
+if kubectl get namespace "prometheus" > /dev/null 2>&1; then
+	echo "Namespace prometheus exists"
 else
-	kubectl create namespace monitoring
-	kubectl config set-context --current --namespace=monitoring
+	kubectl create namespace prometheus
+	kubectl config set-context --current --namespace=prometheus
 	helm install prometheus ./prometheus
 	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
-	echo "Namespace monitoring created"
+	echo "Namespace prometheus created"
 fi
 
 if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
@@ -94,7 +94,7 @@ screen -dmS api-pf bash -c "./pod_running_check.sh socialnetwork nginx-thrift; k
 screen -dmS chaos-pf bash -c "./pod_running_check.sh chaos-mesh chaos-dashboard; kubectl get pods -n chaos-mesh | grep 'chaos-dashboard' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n chaos-mesh {} 2333:2333; exec bash"
 screen -dmS es-pf bash -c "kubectl get pods -n socialnetwork | grep 'socialnetwork-elasticsearch' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 9200:9200; exec bash"
 screen -dmS jaeger-pf bash -c "./pod_running_check.sh socialnetwork jaeger-query; kubectl get pods -n socialnetwork | grep 'jaeger-query' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 16686:16686; exec bash"
-screen -dmS prom-pf bash -c "./pod_running_check.sh monitoring prometheus-server; kubectl get pods -n monitoring | grep 'prometheus-server' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n monitoring {} 9090:9090; exec bash"
+screen -dmS prom-pf bash -c "./pod_running_check.sh prometheus prometheus-server; kubectl get pods -n prometheus | grep 'prometheus-server' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n prometheus {} 9090:9090; exec bash"
 echo "Created new screens to forward all ports"
 
 # Deploy and patch Metrics Server for autoscaling
