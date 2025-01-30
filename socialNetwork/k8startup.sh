@@ -54,7 +54,6 @@ if kubectl get namespace "monitoring" > /dev/null 2>&1; then
 else
 	kubectl create namespace monitoring
 	kubectl config set-context --current --namespace=monitoring
-	helm install cadvisor ./cadvisor
 	helm install prometheus ./prometheus
 	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
 	echo "Namespace monitoring created"
