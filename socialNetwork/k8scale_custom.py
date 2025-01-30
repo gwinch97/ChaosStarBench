@@ -48,25 +48,27 @@ running_threads = []
 
 # DICTIONARY OF SERVICE INFORMATION
 services = {
-    "post-storage-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "user-mention-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "user-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "unique-id-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "media-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "social-graph-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "url-shorten-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "compose-post-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "user-timeline-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "home-timeline-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1},
-    "text-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 1}}
+    "post-storage-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "user-mention-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "user-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "unique-id-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "media-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "social-graph-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "url-shorten-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "compose-post-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "user-timeline-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "home-timeline-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0},
+    "text-service": {"response_time": [0], "cpu_utilisation": [0.0], "cpu_throttling": [0.0], "instances": 0}}
 
 
 def main():
     """Running Autoscaling Script"""
 
-    # disable HPA and replicas to ensure you can scale with custom metrics
+    # disable HPA to ensure you can scale with custom metrics
     disable_hpa("socialnetwork")
-    disable_replicas("socialnetwork")
+
+    # get current number of instances of all services in the namespace
+    get_replicas("socialnetwork")
 
     # ready to begin gathering data and scaling up
     autoscale()
@@ -104,20 +106,14 @@ def disable_hpa(namespace):
         print(f"Unexpected Exception: {e}")
 
 
-def disable_replicas(namespace):
-    """Attempts to get all pods back to 1 instance before running the scaling algorithm"""
+def get_replicas(namespace):
+    """Attempts to get the amount of replicas for each pod"""
     try:
-        pods = core_api.list_namespaced_pod(namespace=namespace).items
-        for pod in pods:
-            # extract name of pod without the hex codes
-            resource_name = remove_hex_code(pod.metadata.name)
-
+        for microservice_name in services.keys():
             try:
-                # remove all replicas
-                deployment = apps_api.read_namespaced_deployment(name=resource_name, namespace=namespace)
-                deployment.spec.replicas = 1
-                # apply replica reduction
-                apps_api.patch_namespaced_deployment(name=resource_name, namespace=namespace, body=deployment)
+                # get current number of replicas
+                deployment = apps_api.read_namespaced_deployment(name=microservice_name, namespace=namespace)
+                services[microservice_name]['instances'] = deployment.spec.replicas
             except ApiException:
                 pass
 
