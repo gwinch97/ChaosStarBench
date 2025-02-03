@@ -9,7 +9,7 @@ container:
   - --config
   - /social-network-microservices/config/mongod.conf
   image: library/mongo
-  imageVersion: 4.4.6
+  imageVersion: 7.0.16
   name: user-mongodb
   ports: 
   - containerPort: 27017

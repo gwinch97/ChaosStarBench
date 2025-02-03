@@ -6,16 +6,26 @@ ports:
 
 container:
   image: library/memcached
-  imageVersion: 1.6.7
+  imageVersion: 1.6.34
   name: user-memcached
   ports: 
   - containerPort: 11211
 
 configMaps:
+  - name: service-config.json
+    mountPath: /social-network-microservices/config/service-config.json
+    value: service-config
+
   - name: jaeger-config.yml
     mountPath: /social-network-microservices/config/jaeger-config.yml
     value: jaeger-config
 
-  - name: service-config.json
-    mountPath: /social-network-microservices/config/service-config.json
-    value: service-config
+jaeger:
+  agentHost: "jaeger-agent"
+  agentPort: 6831
+  samplerType: "const"
+  samplerParam: 1
+  logSpans: true
+  queueSize: 100
+  bufferFlushInterval: 10
+  disabled: false

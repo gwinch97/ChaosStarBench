@@ -69,7 +69,7 @@ RUN apt-get update \
   && make install \
   && cd /tmp \
   # Install jaeger-client-cpp
-  && wget -O jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz https://github.com/jaegertracing/jaeger-client-cpp/archive/v${LIB_JAEGER_VERSION}.tar.gz \
+  R&& wget -O jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz https://github.com/lewisrye/jaeger-client-cpp/archive/v${LIB_JAEGER_VERSION}.tar.gz \
   && tar -zxf jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz \
   && cd jaeger-client-cpp-${LIB_JAEGER_VERSION} \
   && mkdir -p cmake-build \

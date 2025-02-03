@@ -1,6 +1,6 @@
 global: 
   replicas: 1
-  imagePullPolicy: "IfNotPresent"
+  imagePullPolicy: IfNotPresent
   restartPolicy: Always
   serviceType: ClusterIP
   dockerRegistry: docker.io
@@ -32,15 +32,6 @@ global:
         port: 27017
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
-
-  jaeger:
-    localAgentHostPort: jaeger:6831
-    queueSize: 1000000
-    bufferFlushInterval: 10
-    samplerType: probabilistic
-    samplerParam: 0.05
-    disabled: false
-    logSpans: false
 
 
 mongodb-sharded:
@@ -79,3 +70,44 @@ redis:
     persistence:
       enabled: false
     replicaCount: 6
+
+jaeger:
+  enabled: true
+  fullnameOverride: "jaeger"
+
+  agent:
+    enabled: true
+    strategy: DaemonSet  # Use "DaemonSet" or "Sidecar"
+    # Additional agent configurations if needed
+
+  collector:
+    enabled: true
+    replicas: 1
+    # Additional collector configurations if needed
+
+  query:
+    enabled: true
+    # Expose the Jaeger UI if desired
+    service:
+      type: ClusterIP
+    ingress:
+      enabled: false  # Set to true if you want to use Ingress
+      # Additional ingress configurations if needed
+  
+  provisionDataStore:
+    cassandra: false
+    elasticsearch: true
+  
+
+  storage:
+    #type: cassandra
+    #dependencies:
+    #  cassandra:
+    #    enabled: true
+    type: elasticsearch
+    elasticsearch:
+      host: "socialnetwork-elasticsearch"
+      port: 9200
+    
+    cassandra:
+      enabled: false

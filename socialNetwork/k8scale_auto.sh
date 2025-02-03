@@ -42,16 +42,15 @@ else
     # the autoscaler can begin
     kubectl config set-context --current --namespace=socialnetwork
     kubectl autoscale deployment compose-post-service --cpu-percent=50 --min=1 --max=3
-    kubectl autoscale deployment home-timeline-redis --cpu-percent=50 --min=1 --max=2
     kubectl autoscale deployment home-timeline-service --cpu-percent=50 --min=1 --max=2
-    kubectl autoscale deployment nginx-thrift --cpu-percent=50 --min=1 --max=2
-    kubectl autoscale deployment post-storage-mongodb --cpu-percent=50 --min=1 --max=2
+    kubectl autoscale deployment media-service --cpu-percent=50 --min=1 --max=2
     kubectl autoscale deployment post-storage-service --cpu-percent=50 --min=1 --max=2
+    kubectl autoscale deployment social-graph-service --cpu-percent=50 --min=1 --max=2
     kubectl autoscale deployment text-service --cpu-percent=50 --min=1 --max=2
-    kubectl autoscale deployment url-shorten-mongodb --cpu-percent=50 --min=1 --max=2
+    kubectl autoscale deployment unique-id-service --cpu-percent=50 --min=1 --max=2
     kubectl autoscale deployment url-shorten-service --cpu-percent=50 --min=1 --max=2
     kubectl autoscale deployment user-mention-service --cpu-percent=50 --min=1 --max=2
-    kubectl autoscale deployment user-timeline-mongodb --cpu-percent=50 --min=1 --max=2
+    kubectl autoscale deployment user-service --cpu-percent=50 --min=1 --max=2
     kubectl autoscale deployment user-timeline-service --cpu-percent=50 --min=1 --max=2
 fi
 

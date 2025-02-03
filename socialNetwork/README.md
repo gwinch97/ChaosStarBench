@@ -18,20 +18,32 @@ A social network with unidirectional follow relationships, implemented with loos
 
 ## Pre-requirements
 
-* Docker
-* Docker-compose
-* Python 3.5+ (with asyncio and aiohttp)
-* libssl-dev (apt-get install libssl-dev)
-* libz-dev (apt-get install libz-dev)
-* luarocks (apt-get install luarocks)
-* luasocket (luarocks install luasocket)
+* [Docker](https://docs.docker.com/engine/install/)
+* [Helm](https://helm.sh/docs/intro/quickstart/)
+* [kubectl](https://kubernetes.io/docs/tasks/tools/)
+* [Minikube](https://minikube.sigs.k8s.io/docs/start/)
+* Python 3.5+ with the following packages:
+    * asyncio (`pip install asyncio`)
+    * aiohttp (`pip install aiohttp`)
+    * elasticsearch (`pip install elasticsearch`)
+    * kubernetes (`pip install kubernetes`)
+    * requests (`pip install requests`)
+* screen (`sudo apt-get install screen`)
+* libssl-dev (`sudo apt-get install libssl-dev`)
+* libz-dev (`sudo apt-get install libz-dev`)
+* luarocks (`sudo apt-get install luarocks`)
+* luasocket (`sudo luarocks install luasocket`)
 
 ## Running the social network application
 
 ### Before you start
 
-* Install Docker.
-* Make sure the following ports are available: port `8080` for Nginx frontend, `8081` for media frontend and `16686` for Jaeger.
+Make sure the following ports are available:
+- `2333` for Chaos Mesh
+- `8080` for Nginx Frontend
+- `9090` for Prometheus
+- `9200` for Elasticsearch
+- `16686` for Jaeger
 
 ### Start containers on a minikube cluster using Kubernetes.
 
@@ -40,22 +52,11 @@ Ensure that `pod_running_check.sh` has the required permissions
 chmod +x pod_running_check.sh
 ```
 
-Run the startup command 
+Run the startup command (ensure you select 2 or more for `nodes_total`)
 ```bash
 bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
 ```
-
-### Enable metrics-server for horizontal and vertical scaling
-
-> Only repeat this step if metrics API is not available
-```bash
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-```
-
-```bash
-kubectl edit deploy metrics-server -n kube-system
-# - --kubelet-insecure-tls=true
-```
+> A good starting point: `bash k8startup.sh 2 8000 2 1` *(scale up or down as necessary)*
 
 ### Register users and construct social graphs
 
@@ -67,15 +68,10 @@ It will initialize a social graph from a small social network [Reed98 Facebook N
 
 ### Running HTTP workload generator
 
-#### Run Make
-
+>Before starting, you must compile wrk2
 ```bash
 cd ../wrk2
 make
-```
-
-#### Back to socialNetwork
-```bash
 cd ../socialNetwork
 ```
 
@@ -98,7 +94,8 @@ cd ../socialNetwork
 ```
 
 #### View Jaeger traces
-View Jaeger traces by accessing `http://localhost:16686`
+
+You can view Jaeger's frontend using `http://localhost:16686`, or you can download all traces through elasticsearch by running `download_traces.py`.
 
 Example of a Jaeger trace for a compose post request:
 
@@ -135,13 +132,21 @@ must turn on TLS manually by modifing `config/mongod.conf`, `config/redis.conf`,
 
 ## Enable Redis Sharding
 
-start docker containers by running `docker-compose -f docker-compose-sharding.yml up -d` to enable cache and DB sharding. Currently only Redis sharding is available.
+Start docker containers by running `docker-compose -f docker-compose-sharding.yml up -d` to enable cache and DB sharding. Currently only Redis sharding is available.
+
+## MetricsAPI is not available?
+
+> Only repeat this step if you are running `k8scale_auto.sh`!
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
+```
 
 ## Development Status
 
 This application is still actively being developed, so keep an eye on the repo to stay up-to-date with recent changes.
 
-### Planned updates
+## Planned updates
 
 * Upgraded recommender
 * Upgraded search engine
