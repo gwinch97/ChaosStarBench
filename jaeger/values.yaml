@@ -11,6 +11,10 @@ storage:
     host: jaeger-elasticsearch.monitoring.svc.cluster.local
     port: 9200
     usePassword: false
+    persistence:
+      enabled: true
+      storageClass: "csi-hostpath-sc"
+      size: 10Gi
     #tolerations:
     #  - key: "key"
     #    operator: "Equal" 
