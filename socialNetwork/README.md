@@ -22,6 +22,7 @@ A social network with unidirectional follow relationships, implemented with loos
   - [Before you start](#before-you-start)
   - [Run the Startup Script](#run-the-startup-script)
   - [Construct social graphs](#construct-social-graphs)
+  - [Shutting Down the Deployment Safely](#shutting-down-the-deployment-safely)
 - [Generating Workloads](#running-http-workload-generator)
   - [Compose posts](#compose-posts)
   - [Read home timeline](#read-home-timelines)
@@ -86,6 +87,22 @@ python3 scripts/init_social_graph.py --graph=<socfb-Reed98, ego-twitter, or soc-
 ```
 
 It will initialize a social graph from a small social network [Reed98 Facebook Networks](http://networkrepository.com/socfb-Reed98.php), a medium social network [Ego Twitter](https://snap.stanford.edu/data/ego-Twitter.html), or a large social network [TWITTER-FOLLOWS-MUN](https://networkrepository.com/soc-twitter-follows-mun.php).
+
+### Shutting Down the Deployment Safely
+
+If you need to shut down the machine that is running the deployment, to avoid data loss and potential issues, the shutdown script should be ran.
+
+```bash
+bash k8shutdown.sh
+```
+
+This script should gracefully shut down the deployment. When you go to startup the deployment again, you should run the startup script once more.
+
+```bash
+bash k8startup.sh 1 1 1 1 # the numbers are placeholders as the cluster already exists
+```
+
+The startup script will handle starting all pods again and ensuring ports are forwarded correctly.
 
 ## Running HTTP workload generator
 
