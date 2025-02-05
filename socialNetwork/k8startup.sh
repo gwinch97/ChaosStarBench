@@ -64,7 +64,7 @@ if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
 else
 	kubectl create namespace chaos-mesh
 	kubectl config set-context --current --namespace=chaos-mesh
-	helm install chaos-mesh ./chaos-mesh
+	helm install chaos-mesh ./chaos-mesh --set dashboard.securityMode=false
 	echo "Namespace chaos-mesh created"
 fi
 cd socialNetwork
