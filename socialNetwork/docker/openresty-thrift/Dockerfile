@@ -3,8 +3,8 @@ FROM ubuntu:16.04
 # Docker Build Arguments
 ARG RESTY_VERSION="1.15.8.3"
 ARG RESTY_LUAROCKS_VERSION="3.5.0"
-ARG RESTY_OPENSSL_VERSION="1.1.0j"
-ARG RESTY_PCRE_VERSION="8.42"
+ARG RESTY_OPENSSL_VERSION="1.1.0l"
+ARG RESTY_PCRE_VERSION="8.45"
 ARG JAEGER_TRACING_VERSION="0.5.0"
 ARG NGINX_OPENTRACING_VERSION="0.8.0"
 ARG OPENTRACING_CPP_VERSION="1.5.1"
@@ -58,6 +58,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
+        cmake \
         curl \
         git \
         gettext-base \
@@ -71,7 +72,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         perl \
         unzip \
         zlib1g-dev \
-        cmake \
         ${RESTY_ADD_PACKAGE_BUILDDEPS} \
         ${RESTY_ADD_PACKAGE_RUNDEPS} \
     && cd /tmp \
