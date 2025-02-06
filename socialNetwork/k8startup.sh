@@ -21,8 +21,7 @@ else
 	minikube start --cpus=${cpus} --memory=${mem} --extra-config=kubelet.housekeeping-interval=1s --extra-config=kubelet.fail-swap-on=false --nodes ${n_nodes}
 fi
 
-# kubectl taint nodes minikube key=monitoring:NoSchedule
-# Fix for persistant volumes permission issue for >1 node clusters (issue#12360)
+# https://github.com/kubernetes/minikube/issues/12360
 echo "----- FIX PERMISSION ISSUE -----"
 minikube addons disable storage-provisioner
 minikube addons disable default-storageclass
@@ -41,10 +40,6 @@ else
 	kubectl create namespace socialnetwork
 	kubectl config set-context --current --namespace=socialnetwork
 	helm install socialnetwork ./socialnetwork
-	echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
-	../pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
-	../pod_running_check.sh socialnetwork jaeger-collector
-	../pod_running_check.sh socialnetwork jaeger-query
 	echo "Namespace socialnetwork created"
 fi
 
@@ -68,6 +63,11 @@ else
 	echo "Namespace chaos-mesh created"
 fi
 cd socialNetwork
+
+echo "----- WAITING FOR PODS TO BECOME READY -----"
+./pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
+./pod_running_check.sh socialnetwork jaeger-query
+./pod_running_check.sh socialnetwork nginx-thrift
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
