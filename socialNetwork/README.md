@@ -29,7 +29,7 @@ A social network with unidirectional follow relationships, implemented with loos
   - [Read user timeline](#read-user-timelines)
 - [Viewing traces using Jaeger](#view-jaeger-traces)
 - [Use the social network frontend](#use-the-frontend)
-- [Frequently Asked Questions](#frequently-asked-questions)
+- [Questions and Troubleshooting](#questions-and-troubleshooting)
 - [Development Status](#development-status)
 - [Contact Us](#contact-us)
 
@@ -163,9 +163,9 @@ Posts could be mixed with text, mentions and images.
 Click the contact button to follow/unfollow other users; follower/followee list is shown below in the form of user-id:
 ![follow_page](figures/follow.png)
 
-## Frequently Asked Questions
+## Questions and Troubleshooting
 
-### Enable TLS
+### How to Enable TLS?
 
 > This may not work if you are deploying using Minikube
 
@@ -175,13 +175,13 @@ Since the `depends_on` option is ignored when deploying a stack in swarm mode wi
 must turn on TLS manually by modifing `config/mongod.conf`, `config/redis.conf`, `config/service-config.json` and
 `nginx-web-server/conf/nginx.conf` to enable TLS with `docker swarm`.
 
-### Enable Redis Sharding
+### How to Enable Redis Sharding?
 
 > This may not work if you are deploying using Minikube
 
 Start docker containers by running `docker-compose -f docker-compose-sharding.yml up -d` to enable cache and DB sharding. Currently only Redis sharding is available.
 
-### MetricsAPI is not available
+### Error: 'MetricsAPI is not available'
 
 > Only repeat this step if you are running `k8scale_auto.sh`!
 
@@ -189,6 +189,10 @@ Start docker containers by running `docker-compose -f docker-compose-sharding.ym
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
 ```
+
+### Error: 'Too many open files'
+
+This is related to the docker engine not being able to open as many files as are required to run the deployment. To fix this error, increase the `ulimit -n` and `ulimit -Hn` on your machine. The way to change the `ulimit` may be different depending on your Linux distribution.
 
 ## Development Status
 

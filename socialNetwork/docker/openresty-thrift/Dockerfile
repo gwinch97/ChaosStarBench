@@ -147,9 +147,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && if [ -n "${RESTY_EVAL_POST_MAKE}" ]; then eval $(echo ${RESTY_EVAL_POST_MAKE}); fi \
     && rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
     && if [ -n "${RESTY_ADD_PACKAGE_BUILDDEPS}" ]; then DEBIAN_FRONTEND=noninteractive apt-get remove --purge "${RESTY_ADD_PACKAGE_BUILDDEPS}" ; fi \
-    && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
-    && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
-    && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
+    && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
 
 # Add additional binaries into PATH for convenience
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
@@ -165,7 +163,20 @@ COPY lua-thrift /usr/local/openresty/lualib/thrift
 COPY lua-bridge-tracer /tmp/lua-bridge-tracer
 COPY lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
 
-RUN cd /usr/local/openresty/lualib/thrift/src \
+RUN cd /tmp && \
+    git clone https://github.com/gwinch97/ChaosStarBench.git /ChaosStarBench && \
+    mkdir -p /usr/local/openresty/nginx/lua-scripts && \
+    mkdir -p /usr/local/openresty/lualib/thrift && \
+    mkdir -p /usr/local/openresty/nginx/pages && \
+    mkdir -p /gen-lua && \
+    mkdir -p /keys && \
+    cp -r /ChaosStarBench/socialNetwork/gen-lua/* /gen-lua/ && \
+    cp -r /ChaosStarBench/socialNetwork/docker/openresty-thrift/lua-thrift/* /usr/local/openresty/lualib/thrift/ && \
+    cp -r /ChaosStarBench/socialNetwork/nginx-web-server/lua-scripts/* /usr/local/openresty/nginx/lua-scripts/ && \
+    cp -r /ChaosStarBench/socialNetwork/nginx-web-server/pages/* /usr/local/openresty/nginx/pages/ && \
+    cp /ChaosStarBench/socialNetwork/keys/* /keys/ && \
+    rm -rf /ChaosStarBench \
+    && cd /usr/local/openresty/lualib/thrift/src \
     && make \
     && make install \
   ### Build bridge tracer
