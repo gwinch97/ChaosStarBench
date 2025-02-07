@@ -199,6 +199,7 @@ RUN luarocks install long \
 # Copy nginx configuration files
 COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY jaeger-config.json /usr/local/openresty/nginx/jaeger-config.json
 
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
 

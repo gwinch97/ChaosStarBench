@@ -6,10 +6,10 @@ FROM ubuntu:16.04
 LABEL maintainer="Evan Wies <evan@neomantra.net>"
 
 # Docker Build Arguments
-ARG RESTY_VERSION="1.13.6.1"
+ARG RESTY_VERSION="1.13.6.2"
 ARG RESTY_LUAROCKS_VERSION="3.5.0"
-ARG RESTY_OPENSSL_VERSION="1.0.2k"
-ARG RESTY_PCRE_VERSION="8.41"
+ARG RESTY_OPENSSL_VERSION="1.0.2u"
+ARG RESTY_PCRE_VERSION="8.45"
 ARG RESTY_J="32"
 ARG RESTY_CONFIG_OPTIONS="\
     --with-file-aio \
@@ -57,6 +57,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         ca-certificates \
         curl \
         gettext-base \
+        git \
         libgd-dev \
         libgeoip-dev \
         libncurses5-dev \
@@ -97,9 +98,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make -j${RESTY_J} install \
     && cd /tmp \
     && rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
-    && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
-    && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
-    && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
+    && cd /tmp \
+    && git clone https://github.com/gwinch97/ChaosStarBench.git /ChaosStarBench \ 
+    && mkdir -p /lua-scripts \
+    && cp -r /ChaosStarBench/socialNetwork/media-frontend/lua-scripts/* /lua-scripts/ \
+    && rm -rf /ChaosStarBench \
+    && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y
 
 # Add additional binaries into PATH for convenience
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin

@@ -8,22 +8,13 @@ ports:
 
 container:
   image: lewisrye/openresty-thrift
-  imageVersion: xenial-beta
+  imageVersion: xenial
   name: nginx-thrift
   ports: 
   - containerPort: 8080
   env:
   - name: fqdn_suffix
     value: ".{{ .Release.Namespace }}.svc.cluster.local"
-
-configMaps:
-  - name: nginx.conf
-    mountPath: /usr/local/openresty/nginx/conf/nginx.conf 
-    value: nginx
-
-  - name: jaeger-config.yml
-    mountPath: /social-network-microservices/config/jaeger-config.yml
-    value: jaeger-config
 
 # affinity
 affinity:

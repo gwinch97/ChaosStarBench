@@ -10,33 +10,11 @@ container:
   name: media-frontend
   ports: 
   - containerPort: 8081
-  
   env:
   - name: fqdn_suffix
     value: ".{{ .Release.Namespace }}.svc.cluster.local"
-  volumeMounts:
-    - name: lua-scripts
-      mountPath: /usr/local/openresty/nginx/lua-scripts
-
-initContainer:
-  image: alpine/git
-  imageVersion: latest
-  name: alpine-container
-  volumeMounts:
-  - name: lua-scripts
-    mountPath: /lua-scripts
-  command: "/bin/sh" 
-  args: ["-c", "git clone https://github.com/gwinch97/ChaosStarBench.git /ChaosStarBench &&
-            cp -r /ChaosStarBench/socialNetwork/media-frontend/lua-scripts/* /lua-scripts/"]
-
-volumes:
-  - name: lua-scripts
 
 configMaps:
-  - name: nginx.conf
-    mountPath: /usr/local/openresty/nginx/conf/nginx.conf
-    value: nginx
-
   - name: service-config.json
     mountPath: /social-network-microservices/config/service-config.json
     value: service-config

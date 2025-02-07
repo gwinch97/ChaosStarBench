@@ -64,10 +64,8 @@ else
 fi
 cd socialNetwork
 
-echo "----- WAITING FOR PODS TO BECOME READY -----"
-./pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
-./pod_running_check.sh socialnetwork jaeger-query
-./pod_running_check.sh socialnetwork nginx-thrift
+echo "----- WAITING FOR ELASTICSEARCH -----"
+./pod_running_check.sh socialnetwork elasticsearch
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
