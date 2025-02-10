@@ -12,10 +12,7 @@ container:
   imageVersion: 8.0.4
   name: user-mongodb
   ports: 
-    - containerPort: 27017
-  volumeMounts:
-    - name: mongo-storage
-      mountPath: /data/db
+  - containerPort: 27017
 
 configMaps:
   - name: mongod.conf
