@@ -3,4 +3,4 @@ name: user-timeline-mongodb
 description: user-timeline-mongodb microservice in SocialNetwork 
 type: application
 version: 0.1.0
-appVersion: 7.0.16
+appVersion: 8.0.4
