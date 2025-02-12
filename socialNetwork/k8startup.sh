@@ -41,6 +41,7 @@ else
 	kubectl create namespace socialnetwork
 	kubectl config set-context --current --namespace=socialnetwork
 	helm install socialnetwork ./socialnetwork
+	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
 	echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
 	../pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
 	../pod_running_check.sh socialnetwork jaeger-collector
@@ -55,7 +56,6 @@ else
 	kubectl create namespace prometheus
 	kubectl config set-context --current --namespace=prometheus
 	helm install prometheus ./prometheus
-	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
 	echo "Namespace prometheus created"
 fi
 
