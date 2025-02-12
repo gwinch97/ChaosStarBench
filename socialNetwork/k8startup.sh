@@ -15,7 +15,7 @@ echo "----- START MINIKUBE -----"
 
 status=$(minikube status --format='{{.Host}}')
 
-if [[ "$status" == "Running" ]]; then
+if [ "$status" == "Running" ]; then
 	echo "Minikube is already running"
 else
 	minikube start --cpus=${cpus} --memory=${mem} --extra-config=kubelet.housekeeping-interval=1s --extra-config=kubelet.fail-swap-on=false --nodes ${n_nodes}
@@ -68,6 +68,14 @@ else
 	echo "Namespace chaos-mesh created"
 fi
 cd socialNetwork
+
+echo "----- INSTALL CHAOSD -----"
+if command -v chaosd &>/dev/null; then
+    echo "Success: chaosd is already installed."
+else
+    echo "Warning: chaosd is NOT installed. You may be asked to enter your password to install chaosd."
+    sudo bash ./k8install_chaosd.sh # runs in separate script to avoid having to sudo this script
+fi
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
