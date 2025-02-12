@@ -1,0 +1,14 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: delay
+spec:
+  action: delay
+  mode: all # for all pods
+  selector:
+    namespaces:
+      - socialnetwork
+  delay:
+    latency: '50ms'
+    correlation: '100'
+    jitter: '0ms'
