@@ -41,7 +41,7 @@ else
 	kubectl create namespace socialnetwork
 	kubectl config set-context --current --namespace=socialnetwork
 	helm install socialnetwork ./socialnetwork
-	kubectl create configmap jaeger-sampling-strategy --from-file=jaeger/sampling-strategy.json
+	kubectl create configmap jaeger-sampling-strategy --from-file=../../jaeger/sampling-strategy.json
 	echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
 	../pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
 	../pod_running_check.sh socialnetwork jaeger-collector
@@ -69,12 +69,13 @@ else
 fi
 cd socialNetwork
 
-echo "----- INSTALL CHAOSD -----"
+echo "----- CHECK CHAOSD INSTALL -----"
 if command -v chaosd &>/dev/null; then
     echo "Success: chaosd is already installed."
 else
-    echo "Warning: chaosd is NOT installed. You may be asked to enter your password to install chaosd."
-    sudo bash ./k8install_chaosd.sh # runs in separate script to avoid having to sudo this script
+    echo "Warning: chaosd is NOT installed."
+	echo "You may be asked to enter your password to install chaosd and add it to PATH."
+    sudo bash ./install_chaosd.sh # runs in separate script to avoid having to sudo this script
 fi
 
 # Scale socialnetwork deployment
