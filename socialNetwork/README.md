@@ -35,7 +35,7 @@ A social network with unidirectional follow relationships, implemented with loos
 
 ## Dependencies
 
-* [chaosd](https://chaos-mesh.org/docs/chaosd-overview/)
+* [Chaosd](https://chaos-mesh.org/docs/chaosd-overview/)
 * [Docker](https://docs.docker.com/engine/install/)
 * [Helm](https://helm.sh/docs/intro/quickstart/)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/)
