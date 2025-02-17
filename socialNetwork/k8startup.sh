@@ -42,7 +42,6 @@ else
 	kubectl config set-context --current --namespace=socialnetwork
 	helm install socialnetwork ./socialnetwork
 	kubectl create configmap jaeger-sampling-strategy --from-file=../../jaeger/sampling-strategy.json
-	echo "Namespace socialnetwork created"
 fi
 
 cd ../.. # back to ChaosStarBench folder
@@ -52,7 +51,6 @@ else
 	kubectl create namespace prometheus
 	kubectl config set-context --current --namespace=prometheus
 	helm install prometheus ./prometheus
-	echo "Namespace prometheus created"
 fi
 
 if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
@@ -61,7 +59,6 @@ else
 	kubectl create namespace chaos-mesh
 	kubectl config set-context --current --namespace=chaos-mesh
 	helm install chaos-mesh ./chaos-mesh --set dashboard.securityMode=false
-	echo "Namespace chaos-mesh created"
 fi
 cd socialNetwork
 
@@ -75,8 +72,8 @@ else
 fi
 
 echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
-../pod_running_check.sh socialnetwork elasticsearch
-../pod_running_check.sh socialnetwork jaeger-query
+./pod_running_check.sh socialnetwork elasticsearch
+./pod_running_check.sh socialnetwork jaeger-query
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
