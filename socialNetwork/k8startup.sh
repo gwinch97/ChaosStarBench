@@ -42,10 +42,6 @@ else
 	kubectl config set-context --current --namespace=socialnetwork
 	helm install socialnetwork ./socialnetwork
 	kubectl create configmap jaeger-sampling-strategy --from-file=../../jaeger/sampling-strategy.json
-	echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
-	../pod_running_check.sh socialnetwork socialnetwork-elasticsearch-master
-	../pod_running_check.sh socialnetwork jaeger-collector
-	../pod_running_check.sh socialnetwork jaeger-query
 	echo "Namespace socialnetwork created"
 fi
 
@@ -77,6 +73,10 @@ else
 	echo "You may be asked to enter your password to install Chaosd and add it to PATH."
     sudo bash ./install_chaosd.sh # runs in separate script to avoid having to sudo this script
 fi
+
+echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
+../pod_running_check.sh socialnetwork elasticsearch
+../pod_running_check.sh socialnetwork jaeger-query
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
