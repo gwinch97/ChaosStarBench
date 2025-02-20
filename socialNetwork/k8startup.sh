@@ -79,7 +79,7 @@ echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
 if [ "$n_inst" -gt 1 ]; then
 	echo "----- SCALE DEPLOYMENT -----"
 	for deploy in $(kubectl get deploy -n socialnetwork -o name); do
-		if [[ "$deploy" == *"jaeger"* ]] || [[ "$deploy" == *"mongodb"* ]] || [[ "$deploy" == *"media-frontend"* ]] || [[ "$deploy" == *"nginx"* ]] || [[ "$deploy" == *"redis"* ]] || [[ "$deploy" == *"memcache"* ]]; then
+		if [ "$deploy" == *"jaeger"* ] || [ "$deploy" == *"mongodb"* ] || [ "$deploy" == *"media-frontend"* ] || [ "$deploy" == *"nginx"* ] || [ "$deploy" == *"redis"* ] || [ "$deploy" == *"memcache"* ]; then
 			continue
 		fi
 		kubectl scale --replicas=${n_inst} $deploy -n socialnetwork;

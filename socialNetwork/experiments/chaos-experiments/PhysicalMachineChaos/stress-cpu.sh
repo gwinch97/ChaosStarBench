@@ -16,4 +16,4 @@ if [ -z "$3" ]; then # check arg3
     workers=1
 fi
 
-chaosd attack stress cpu --load=${load} --options=${workers} --workers=${workers} 
+sudo chaosd attack stress cpu --load=${load} --options=${workers} --workers=${workers} 
