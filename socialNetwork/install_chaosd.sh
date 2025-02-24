@@ -1,6 +1,5 @@
 #!/bin/bash
 
-echo "----- CHECK CHAOSD INSTALL -----"
 if command -v chaosd &>/dev/null; then
     echo "Success: Chaosd is already installed."
 else

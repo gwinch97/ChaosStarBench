@@ -66,10 +66,11 @@ cd socialNetwork
 echo "----- CHECKING FOR MINIKUBE CHAOSD INSTALL -----"
 minikube cp ./install_chaosd.sh /home/docker/
 minikube ssh -- "bash ./install_chaosd.sh"
+# to install on user's machine, run 'bash ./install_chaosd.sh'
 
 echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
-bash ./pod_running_check.sh socialnetwork elasticsearch
-bash ./pod_running_check.sh socialnetwork jaeger-query
+bash ./pod_running_check.sh "socialnetwork" "elasticsearch"
+bash ./pod_running_check.sh "socialnetwork" "jaeger-query"
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
@@ -82,6 +83,7 @@ if [ "$n_inst" -gt 1 ]; then
 	done
 fi
 
+echo "----- PORT FORWARDING -----"
 # End all existing port forwarding screens
 SESSION_NAMES=("api-pf" "chaos-pf" "es-pf" "jaeger-pf" "prom-pf")
 for SESSION_NAME in "${SESSION_NAMES[@]}"; do
@@ -90,8 +92,7 @@ for SESSION_NAME in "${SESSION_NAMES[@]}"; do
     fi
 done
 
-# Start required port-forwarding
-echo "----- PORT FORWARDING -----"
+# Create new port forwards
 screen -dmS api-pf bash -c "./pod_running_check.sh socialnetwork nginx-thrift; kubectl get pods -n socialnetwork | grep 'nginx-thrift' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 8080:8080; exec bash"
 screen -dmS chaos-pf bash -c "./pod_running_check.sh chaos-mesh chaos-dashboard; kubectl get pods -n chaos-mesh | grep 'chaos-dashboard' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n chaos-mesh {} 2333:2333; exec bash"
 screen -dmS es-pf bash -c "kubectl get pods -n socialnetwork | grep 'socialnetwork-elasticsearch' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 9200:9200; exec bash"
