@@ -62,18 +62,14 @@ else
 fi
 cd socialNetwork
 
-echo "----- CHECK CHAOSD INSTALL -----"
-if command -v chaosd &>/dev/null; then
-    echo "Success: Chaosd is already installed."
-else
-    echo "Warning: Chaosd is NOT installed."
-	echo "You may be asked to enter your password to install Chaosd and add it to PATH."
-    sudo bash ./install_chaosd.sh # runs in separate script to avoid having to sudo this script
-fi
+
+echo "----- CHECKING FOR MINIKUBE CHAOSD INSTALL -----"
+minikube cp ./install_chaosd.sh /home/docker/
+minikube ssh -- "bash ./install_chaosd.sh"
 
 echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
-./pod_running_check.sh socialnetwork elasticsearch
-./pod_running_check.sh socialnetwork jaeger-query
+bash ./pod_running_check.sh socialnetwork elasticsearch
+bash ./pod_running_check.sh socialnetwork jaeger-query
 
 # Scale socialnetwork deployment
 if [ "$n_inst" -gt 1 ]; then
