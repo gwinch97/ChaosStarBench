@@ -40,15 +40,7 @@ A social network with unidirectional follow relationships, implemented with loos
 * [Helm](https://helm.sh/docs/intro/quickstart/)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/)
 * [Minikube](https://minikube.sigs.k8s.io/docs/start/)
-* Python 3.5+ with the following packages:
-    * asyncio (`pip install asyncio`)
-    * aiohttp (`pip install aiohttp`)
-    * elasticsearch (`pip install elasticsearch`)
-    * kubernetes (`pip install kubernetes`)
-    * matplotlib (`pip install matplotlib`)
-    * numpy (`pip install numpy`)
-    * pandas (`pip install pandas`)
-    * requests (`pip install requests`)
+* Python 3.5+ with the packages stated in `requirements.txt` (`pip install -r requirements.txt`)
 * screen (`sudo apt-get install screen`)
 * libssl-dev (`sudo apt-get install libssl-dev`)
 * libz-dev (`sudo apt-get install libz-dev`)
@@ -68,12 +60,10 @@ Make sure the following ports are available:
 
 ### Run the Startup Script
 
-Ensure that `pod_running_check.sh` has the required permissions
-```bash
-chmod +x pod_running_check.sh
-```
+> Ensure that the required permissions are set `
+chmod +x pod_running_check.sh`
 
-Run the startup command (ensure you select 2 or more for `nodes_total`)
+Run the startup command
 ```bash
 bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
 ```
