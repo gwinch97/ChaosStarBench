@@ -1,7 +1,7 @@
 apiVersion: chaos-mesh.org/v1alpha1
 kind: IOChaos
 metadata:
-  name: io-latency
+  name: io-latency-high
   namespace: socialnetwork
 spec:
   action: latency
@@ -11,6 +11,6 @@ spec:
       - 'socialnetwork'  
   volumePath: /
   path: '/*'
-  delay: '250ms'
-  percent: 50
-  duration: '60s'
+  delay: '900ms'
+  percent: 90
+  duration: '3600s'
