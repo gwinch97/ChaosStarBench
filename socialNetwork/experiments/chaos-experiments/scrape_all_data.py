@@ -3,12 +3,11 @@
 import json
 import os
 import requests
-import threading
 import time
-import tqdm
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from elasticsearch import Elasticsearch, helpers
+from tqdm import tqdm
 
 # GET DEPLOYMENT IP AND PORTS
 IP_ADDRESS = "127.0.0.1"
@@ -26,6 +25,7 @@ STEP = "10s" # get prom data every 10s interval
 
 # IMPORTANT FILES
 DIRECTORY = f'.results/{datetime.now()}'
+os.makedirs(DIRECTORY, exist_ok=True) # create the directory
 JAEGER_FILE = f'{DIRECTORY}/jaeger_traces.json'
 
 def main():
@@ -67,6 +67,8 @@ def main():
             f.write(']')
 
         print(f"Traces saved to: {JAEGER_FILE}")
+    else:
+        print("No traces found!")
     
     # GET PROMETHEUS DATA
 
@@ -85,8 +87,8 @@ def main():
         metrics = []
     
     for metric in metrics:
-        print(metric)
-    # add to json file later
+        print(f'METRIC: {metric}')
+        # add to json file later
 
     params = {
         "query": THROTTLING_QUERY,
@@ -103,5 +105,8 @@ def main():
         metrics = []
     
     for metric in metrics:
-        print(metric)
-    # add to json file later
+        print(f'METRIC: {metric}')
+        # add to json file later
+
+if __name__ == "__main__":
+    main()

@@ -63,9 +63,9 @@ cd experiments/chaos-experiments/$experiment
 kubectl apply -f $yaml
 
 # run workload for another 30 mins with chaos
+cd ../../../
 ../wrk2/wrk -D exp -t $threads -c $connections -d $duration_half -L -s ./wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R $requests_per_second
 
 # scrape metrics
-cd ../../../
 source .venv/bin/activate
-python3 scrape_all_data.py
+python3 experiments/chaos-experiments/scrape_all_data.py
