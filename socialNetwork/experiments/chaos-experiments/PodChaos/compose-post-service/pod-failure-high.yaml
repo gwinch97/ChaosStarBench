@@ -1,0 +1,14 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: pod-failure-high
+  namespace: socialnetwork
+spec:
+  selector:
+    namespaces:
+      - 'socialnetwork'
+    labelSelectors:
+      app: compose-post-service
+  action: pod-failure
+  mode: all # all pods named compose-post-service
+  duration: 3600s

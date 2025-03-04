@@ -1,9 +1,0 @@
-apiVersion: chaos-mesh.org/v1alpha1
-kind: PodChaos
-metadata:
-  name: cps-container-kill
-  namespace: socialnetwork
-spec:
-  action: container-kill
-  mode: one # all pods in container
-  containerNames: ['socialnetwork']
