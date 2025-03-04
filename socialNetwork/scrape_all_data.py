@@ -24,6 +24,10 @@ END_TIME = int(time.time())
 START_TIME = END_TIME - 3600
 STEP = "10s" # get prom data every 10s interval
 
+# IMPORTANT FILES
+DIRECTORY = f'.results/{datetime.now()}'
+JAEGER_FILE = f'{DIRECTORY}/jaeger_traces.json'
+
 def main():
     # Initialize Elasticsearch
     es = Elasticsearch([{'host': IP_ADDRESS, 'port': ELASTICSEARCH_PORT, 'scheme': 'http'}])
@@ -48,7 +52,7 @@ def main():
     if total != 0:
         scroll_gen = helpers.scan(client=es, index=index_pattern, query=query, scroll=scroll, size=batch_size,
                                     preserve_order=False)
-        with open('1h_jaeger_traces.json', 'w') as f:
+        with open(JAEGER_FILE, 'w') as f:
             f.write('[')
             first = True
             with tqdm(total=total, desc="Exporting Traces") as pbar:
@@ -62,7 +66,7 @@ def main():
                     pbar.update(1)
             f.write(']')
 
-        print(f"Traces saved to: 1h_jaeger_traces.json")
+        print(f"Traces saved to: {JAEGER_FILE}")
     
     # GET PROMETHEUS DATA
 

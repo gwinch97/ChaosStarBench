@@ -23,6 +23,6 @@ done
 
 # forward ports for the specific redis db
 echo "Creating a screen to forward the ports for ${pod_name}";
-screen -dmS redis-pf bash -c "../../../pod_running_check.sh socialnetwork ${pod_name}; kubectl get pods -n socialnetwork | grep '${pod_name}' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 6379:6379; exec bash";
+screen -dmS redis-pf bash -c "../../../k8pod_check.sh socialnetwork ${pod_name}; kubectl get pods -n socialnetwork | grep '${pod_name}' | awk '{print \$1}' | xargs -I {} kubectl port-forward -n socialnetwork {} 6379:6379; exec bash";
 
 sudo chaosd attack redis cache-penetration -a 127.0.0.1:6379 --request-num ${requests}

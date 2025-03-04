@@ -61,7 +61,18 @@ Make sure the following ports are available:
 ### Run the Startup Script
 
 > Ensure that the required permissions are set `
-chmod +x pod_running_check.sh`
+chmod +x k8pod_check.sh`
+
+Create a Python virtual environment in the socialNetwork folder
+```bash
+python3 -m venv .venv/
+```
+
+Install dependencies to the virtual environment
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
 Run the startup command
 ```bash

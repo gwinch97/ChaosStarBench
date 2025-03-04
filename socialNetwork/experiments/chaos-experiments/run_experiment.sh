@@ -18,6 +18,9 @@ requests_per_second="$6"
 EXPERIMENT_NAMES=("iochaos" "networkchaos" "physicalmachinechaos" "podchaos" "redischaos" "stresschaos")
 experiment_found=false
 
+# Disable case sensitivity
+shopt -s nocasematch
+
 # Loop through the array to check if $experiment is in $EXPRIMENT_NAMES
 for exp in "${EXPERIMENT_NAMES[@]}"; do
     if [ "$exp" == "$experiment" ]; then
@@ -61,3 +64,8 @@ kubectl apply -f $yaml
 
 # run workload for another 30 mins with chaos
 ../wrk2/wrk -D exp -t $threads -c $connections -d $duration_half -L -s ./wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R $requests_per_second
+
+# scrape metrics
+cd ../../../
+source .venv/bin/activate
+python3 scrape_all_data.py

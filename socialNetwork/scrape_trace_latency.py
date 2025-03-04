@@ -12,12 +12,12 @@ durations = []
 for entry in data:
     durations.append(entry['duration'])
 
-    # Plot the data
+# Plot the data
 plt.figure(figsize=(10, 5))
 plt.plot(timestamps, durations, label='Duration (ms)')
 plt.xlabel("Time")
 plt.ylabel("Duration (ms)")
-plt.title("Span Duration Over Time (NetworkChaos applied at 30s)")
+plt.title("Span Duration Over Time (chaos applied at 30mins)")
 plt.legend()
 plt.grid()
 
