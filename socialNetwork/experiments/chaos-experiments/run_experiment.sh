@@ -31,19 +31,21 @@ done
 
 if [ "$experiment_found" == false ]; then
     echo "Error: Experiment '$experiment' is not found."
+    echo "Supported experiments (case sensitive):"
+    echo "iochaos networkchaos physicalmachinechaos podchaos redischaos stresschaos"
     exit 1
 fi
 
 # Validate severity
 case "$severity" in
     low)
-        yaml="*-low.yaml"
+        yaml="low.yaml"
         ;;
     medium)
-        yaml="*-medium.yaml"
+        yaml="medium.yaml"
         ;;
     high)
-        yaml="*-high.yaml"
+        yaml="high.yaml"
         ;;
     *)
         echo "Error: Invalid severity value. Choose from 'low', 'medium', or 'high'."
@@ -55,17 +57,18 @@ duration_half=$((duration / 2))
 
 cd ../../
 
-# run workload for 30 mins without chaos
+echo "----- RUN WORKLOAD BEFORE FAULT -----"
 ../wrk2/wrk -D exp -t $threads -c $connections -d $duration_half -L -s ./wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R $requests_per_second
 
-# inject chaos
-cd experiments/chaos-experiments/$experiment
-kubectl apply -f $yaml
+echo "----- INJECT CHAOS -----"
+kubectl apply -f experiments/chaos-experiments/$experiment/$yaml
 
-# run workload for another 30 mins with chaos
-cd ../../../
+echo "----- RUN WORKLOAD AFTER FAULT -----"
 ../wrk2/wrk -D exp -t $threads -c $connections -d $duration_half -L -s ./wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R $requests_per_second
 
-# scrape metrics
+echo "----- SCRAPING METRICS -----"
 source .venv/bin/activate
 python3 experiments/chaos-experiments/scrape_all_data.py
+
+echo "----- EXPERIMENT COMPLETE -----"
+echo "Experiment results and metrics are stored in the socialNetwork/.results directory"
