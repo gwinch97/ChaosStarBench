@@ -23,6 +23,7 @@ MEMORY_UTILISATION_QUERY = 'sum(container_memory_usage_bytes{namespace=~"socialn
 END_TIME = int(time.time())
 START_TIME = END_TIME - 3600
 STEP = "10s" # get prom data every 10s interval
+INDEX_PATTERN = "jaeger-span-*"
 
 # IMPORTANT FILES
 DIRECTORY = f'.results/{datetime.now()}'
@@ -33,60 +34,45 @@ PROM_CPU_THROTTLING_FILE = f'{DIRECTORY}/prometheus_cpu_throttling.json'
 PROM_MEM_UTILISATION_FILE = f'{DIRECTORY}/prometheus_mem_utilisation.json'
 
 def main():
-    try:
-        # Initialize Elasticsearch
-        es = Elasticsearch([{'host': IP_ADDRESS, 'port': ELASTICSEARCH_PORT, 'scheme': 'http'}], request_timeout=30)
-        index_pattern = "jaeger-span-*"
-        scroll = '2m'
-        batch_size = 1000
-        # GET JAEGER TRACE LATENCY
-        # Get epoch time 1 hour ago (in milliseconds)
-        epoch_time_1h_ago = int(time.time() - 3600) * 1000
+    # Initialize Elasticsearch client
+    es = Elasticsearch([{'host': IP_ADDRESS, 'port': ELASTICSEARCH_PORT, 'scheme': 'http'}])
+    # Initialize the scroll
+    scroll = '2m'
+    batch_size = 1000
 
-        query = {
-            "query": {
-                "range": {
-                    "startTimeMillis": {
-                        "gte": epoch_time_1h_ago
-                    }
-                }
-            }
+    query = {
+        "query": {
+            "match_all": {}
         }
+    }
 
-        scroll_gen = helpers.scan(
-            client=es,
-            index=index_pattern,
-            query=query,
-            scroll=scroll,
-            size=batch_size,
-            preserve_order=False
-        )
+    scroll_gen = helpers.scan(
+        client=es,
+        index=INDEX_PATTERN,
+        query=query,
+        scroll=scroll,
+        size=batch_size,
+        preserve_order=False
+    )
 
-        # Open the output file
-        with open(JAEGER_FILE, 'w') as f:
-            f.write('[')
-            first = True
-            total = es.count(index=index_pattern)['count']
+    # Open the output file
+    with open(JAEGER_FILE, 'w') as f:
+        f.write('[')
+        first = True
+        total = es.count(index=INDEX_PATTERN)['count']
+        with tqdm(total=total, desc="Exporting Traces") as pbar:
+            for doc in scroll_gen:
+                trace = doc['_source']
+                # Could process or filter trace before saving
+                if not first:
+                    f.write(',\n')
+                else:
+                    first = False
+                json.dump(trace, f)
+                pbar.update(1)
+        f.write(']')
 
-            if total > 0:
-                with tqdm(total=total, desc="Exporting Traces") as pbar:
-                    for doc in scroll_gen:
-                        trace = doc['_source']
-                        # Could process or filter trace before saving
-                        if not first:
-                            f.write(',\n')
-                        else:
-                            first = False
-                        json.dump(trace, f)
-                        pbar.update(1)
-                f.write(']')
-
-                print(f"Traces saved to: {JAEGER_FILE}")
-            else:
-                print("No traces found!")
-    except Exception as e:
-        print("Unable to query Jaeger traces")
-        print(e)
+    print(f"Export completed. Traces saved to {JAEGER_FILE}")
     
     # GET PROMETHEUS CPU UTILISATION DATA
 

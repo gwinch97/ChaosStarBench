@@ -104,14 +104,6 @@ jaeger:
     elasticsearch:
       host: "socialnetwork-elasticsearch"
       port: 9200
-      resources:
-        requests:
-          memory: "2Gi"
-        limits:
-          memory: "4Gi"
-      extraEnv:
-        - name: ES_JAVA_OPTS
-          value: "-Xms4g -Xmx4g"
     
     cassandra:
       enabled: false
