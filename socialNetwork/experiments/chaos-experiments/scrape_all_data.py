@@ -17,8 +17,9 @@ PROM_PORT = 9090
 
 # QUERY SPECIFIC VARIABLES
 PROMETHEUS_URL = f"http://{IP_ADDRESS}:{PROM_PORT}/api/v1/query_range"
-UTILISATION_QUERY = 'rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])'
-THROTTLING_QUERY = 'rate(container_cpu_cfs_throttled_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])'
+CPU_UTILISATION_QUERY = 'rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])'
+CPU_THROTTLING_QUERY = 'rate(container_cpu_cfs_throttled_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])'
+MEMORY_UTILISATION_QUERY = 'sum(container_memory_usage_bytes{namespace=~"socialnetwork", pod=~".*service.*"}) by (pod)'
 END_TIME = int(time.time())
 START_TIME = END_TIME - 3600
 STEP = "10s" # get prom data every 10s interval
@@ -27,25 +28,33 @@ STEP = "10s" # get prom data every 10s interval
 DIRECTORY = f'.results/{datetime.now()}'
 os.makedirs(DIRECTORY, exist_ok=True) # create the directory
 JAEGER_FILE = f'{DIRECTORY}/jaeger_traces.json'
-PROM_CPU_USAGE_FILE = f'{DIRECTORY}/prometheus_cpu_usage.json'
+PROM_CPU_UTILISATION_FILE = f'{DIRECTORY}/prometheus_cpu_utilisation.json'
 PROM_CPU_THROTTLING_FILE = f'{DIRECTORY}/prometheus_cpu_throttling.json'
+PROM_MEM_UTILISATION_FILE = f'{DIRECTORY}/prometheus_mem_utilisation.json'
 
 def main():
-    # Initialize Elasticsearch
-    es = Elasticsearch([{'host': IP_ADDRESS, 'port': ELASTICSEARCH_PORT, 'scheme': 'http'}])
-    index_pattern = "jaeger-span-*"
-    scroll = '2m'
-    batch_size = 500
-
-    # GET JAEGER TRACE LATENCY
-    # Get epoch time 1 hour ago (in milliseconds)
-    epoch_time_1h_ago = int(time.time() - 3600) * 1000
-
-    # Initialize the query to match traces based on the startTimeMillis field
-    query = {"_source": ["process.serviceName", "duration"],
-                "query": {"range": {"startTimeMillis": {"gte": epoch_time_1h_ago}}}}
-
     try:
+        # Initialize Elasticsearch
+        es = Elasticsearch([{'host': IP_ADDRESS, 'port': ELASTICSEARCH_PORT, 'scheme': 'http'}], request_timeout=30)
+        index_pattern = "jaeger-span-*"
+        scroll = '2m'
+        batch_size = 500
+        # GET JAEGER TRACE LATENCY
+        # Get epoch time 1 hour ago (in milliseconds)
+        epoch_time_1h_ago = int(time.time() - 3600) * 1000
+
+        # Initialize the query to match traces based on the startTimeMillis field
+        query = {
+            "_source": ["process.serviceName", "duration"],
+            "query": {
+                "range": {
+                    "startTimeMillis": {
+                        "gte": epoch_time_1h_ago
+                    }
+                }
+            }
+        }
+
         total = es.count(index=index_pattern, body={"query": query['query']})['count']
 
         if es.count(index=index_pattern, body={"query": query['query']})['count'] != 0:
@@ -71,13 +80,13 @@ def main():
         else:
             print("No traces found!")
     except Exception as e:
-        print("Unable to query Jaeger response time")
+        print("Unable to query Jaeger traces")
         print(e)
     
-    # GET PROMETHEUS DATA
+    # GET PROMETHEUS CPU UTILISATION DATA
 
     params = {
-        "query": UTILISATION_QUERY,
+        "query": CPU_UTILISATION_QUERY,
         "start": START_TIME,
         "end": END_TIME,
         "step": STEP,
@@ -87,18 +96,20 @@ def main():
         response = requests.get(url=PROMETHEUS_URL, params=params, timeout=10)
         data = response.json()
 
-        with open(PROM_CPU_USAGE_FILE, 'w') as file:
+        with open(PROM_CPU_UTILISATION_FILE, 'w') as file:
             json.dump(data, file, indent=4)
         
         print('--------------------')
-        print(f"CPU utilisation values saved to: {PROM_CPU_USAGE_FILE}")
+        print(f"CPU utilisation values saved to: {PROM_CPU_UTILISATION_FILE}")
         print('--------------------')
     except Exception as e:
         print("Unable to query Prometheus CPU utilisation")
         print(e)
 
+    # GET PROMETHEUS CPU THROTTLING DATA
+
     params = {
-        "query": THROTTLING_QUERY,
+        "query": CPU_THROTTLING_QUERY,
         "start": START_TIME,
         "end": END_TIME,
         "step": STEP,
@@ -116,6 +127,29 @@ def main():
         print('--------------------')
     except Exception as e:
         print("Unable to query Prometheus CPU throttling")
+        print(e)
+
+    # GET PROMETHEUS MEM UTILISATION DATA
+
+    params = {
+        "query": MEMORY_UTILISATION_QUERY,
+        "start": START_TIME,
+        "end": END_TIME,
+        "step": STEP,
+    }
+
+    try:
+        response = requests.get(url=PROMETHEUS_URL, params=params, timeout=10)
+        data = response.json()
+
+        with open(PROM_MEM_UTILISATION_FILE, 'w') as file:
+            json.dump(data, file, indent=4)
+        
+        print('--------------------')
+        print(f"Memory utilisation values saved to: {PROM_MEM_UTILISATION_FILE}")
+        print('--------------------')
+    except Exception as e:
+        print("Unable to query Prometheus memory utilisation")
         print(e)
 
 
