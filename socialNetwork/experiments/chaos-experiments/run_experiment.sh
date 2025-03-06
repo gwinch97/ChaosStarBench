@@ -56,6 +56,8 @@ esac
 duration_half=$((duration / 2))
 
 cd ../../
+source .venv/bin/activate
+sleep 5
 
 echo "----- RUN WORKLOAD BEFORE FAULT -----"
 ../wrk2/wrk -D exp -t $threads -c $connections -d $duration_half -L -s ./wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R $requests_per_second
@@ -67,7 +69,6 @@ echo "----- RUN WORKLOAD AFTER FAULT -----"
 ../wrk2/wrk -D exp -t $threads -c $connections -d $duration_half -L -s ./wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R $requests_per_second
 
 echo "----- SCRAPING METRICS -----"
-source .venv/bin/activate
 python3 experiments/chaos-experiments/scrape_all_data.py
 
 echo "----- EXPERIMENT COMPLETE -----"

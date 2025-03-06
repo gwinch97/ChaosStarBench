@@ -27,6 +27,8 @@ STEP = "10s" # get prom data every 10s interval
 DIRECTORY = f'.results/{datetime.now()}'
 os.makedirs(DIRECTORY, exist_ok=True) # create the directory
 JAEGER_FILE = f'{DIRECTORY}/jaeger_traces.json'
+PROM_CPU_USAGE_FILE = f'{DIRECTORY}/prometheus_cpu_usage.json'
+PROM_CPU_THROTTLING_FILE = f'{DIRECTORY}/prometheus_cpu_throttling.json'
 
 def main():
     # Initialize Elasticsearch
@@ -45,30 +47,32 @@ def main():
 
     try:
         total = es.count(index=index_pattern, body={"query": query['query']})['count']
-    except Exception:
+
+        if es.count(index=index_pattern, body={"query": query['query']})['count'] != 0:
+            scroll_gen = helpers.scan(client=es, index=index_pattern, query=query, scroll=scroll, size=batch_size,
+                                        preserve_order=False)
+            with open(JAEGER_FILE, 'w') as f:
+                f.write('[')
+                first = True
+                with tqdm(total=total, desc="Exporting Traces") as pbar:
+                    for doc in scroll_gen:
+                        trace = doc['_source']
+                        if not first:
+                            f.write(',\n')
+                        else:
+                            first = False
+                        json.dump(trace, f)
+                        pbar.update(1)
+                f.write(']')
+
+            print('--------------------')
+            print(f"Traces saved to: {JAEGER_FILE}")
+            print('--------------------')
+        else:
+            print("No traces found!")
+    except Exception as e:
         print("Unable to query Jaeger response time")
-        total = 0
-
-    if total != 0:
-        scroll_gen = helpers.scan(client=es, index=index_pattern, query=query, scroll=scroll, size=batch_size,
-                                    preserve_order=False)
-        with open(JAEGER_FILE, 'w') as f:
-            f.write('[')
-            first = True
-            with tqdm(total=total, desc="Exporting Traces") as pbar:
-                for doc in scroll_gen:
-                    trace = doc['_source']
-                    if not first:
-                        f.write(',\n')
-                    else:
-                        first = False
-                    json.dump(trace, f)
-                    pbar.update(1)
-            f.write(']')
-
-        print(f"Traces saved to: {JAEGER_FILE}")
-    else:
-        print("No traces found!")
+        print(e)
     
     # GET PROMETHEUS DATA
 
@@ -81,14 +85,17 @@ def main():
 
     try:
         response = requests.get(url=PROMETHEUS_URL, params=params, timeout=10)
-        metrics = response.json()["data"]["result"]
-    except Exception:
+        data = response.json()
+
+        with open(PROM_CPU_USAGE_FILE, 'w') as file:
+            json.dump(data, file, indent=4)
+        
+        print('--------------------')
+        print(f"CPU utilisation values saved to: {PROM_CPU_USAGE_FILE}")
+        print('--------------------')
+    except Exception as e:
         print("Unable to query Prometheus CPU utilisation")
-        metrics = []
-    
-    for metric in metrics:
-        print(f'METRIC: {metric}')
-        # add to json file later
+        print(e)
 
     params = {
         "query": THROTTLING_QUERY,
@@ -99,14 +106,18 @@ def main():
 
     try:
         response = requests.get(url=PROMETHEUS_URL, params=params, timeout=10)
-        metrics = response.json()["data"]["result"]
-    except Exception:
+        data = response.json()
+
+        with open(PROM_CPU_THROTTLING_FILE, 'w') as file:
+            json.dump(data, file, indent=4)
+        
+        print('--------------------')
+        print(f"CPU throttling values saved to: {PROM_CPU_THROTTLING_FILE}")
+        print('--------------------')
+    except Exception as e:
         print("Unable to query Prometheus CPU throttling")
-        metrics = []
-    
-    for metric in metrics:
-        print(f'METRIC: {metric}')
-        # add to json file later
+        print(e)
+
 
 if __name__ == "__main__":
     main()
