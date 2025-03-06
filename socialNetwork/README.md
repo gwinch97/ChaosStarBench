@@ -35,6 +35,7 @@ A social network with unidirectional follow relationships, implemented with loos
 
 ## Dependencies
 
+* [Chaosd](https://chaos-mesh.org/docs/chaosd-overview/)
 * [Docker](https://docs.docker.com/engine/install/)
 * [Helm](https://helm.sh/docs/intro/quickstart/)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/)
@@ -60,7 +61,18 @@ Make sure the following ports are available:
 ### Run the Startup Script
 
 > Ensure that the required permissions are set `
-chmod +x pod_running_check.sh`
+chmod +x k8pod_check.sh`
+
+Create a Python virtual environment in the socialNetwork folder
+```bash
+python3 -m venv .venv/
+```
+
+Install dependencies to the virtual environment
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
 Run the startup command
 ```bash

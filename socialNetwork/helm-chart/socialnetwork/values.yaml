@@ -100,10 +100,6 @@ jaeger:
   
 
   storage:
-    #type: cassandra
-    #dependencies:
-    #  cassandra:
-    #    enabled: true
     type: elasticsearch
     elasticsearch:
       host: "socialnetwork-elasticsearch"

@@ -8,7 +8,7 @@ container:
   args: 
   - /social-network-microservices/config/redis.conf
   image: library/redis
-  imageVersion: 7.4.1
+  imageVersion: 7.4.2
   name: user-timeline-redis
   ports: 
   - containerPort: 6379
