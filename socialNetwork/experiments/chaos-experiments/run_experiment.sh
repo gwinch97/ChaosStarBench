@@ -57,7 +57,7 @@ duration_half=$((duration / 2))
 
 cd ../../
 source .venv/bin/activate
-sleep 5
+# if this doesn't run, ensure you ran `make` on wrk2 directory
 
 echo "----- RUN WORKLOAD BEFORE FAULT -----"
 ../wrk2/wrk -D exp -t $threads -c $connections -d $duration_half -L -s ./wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R $requests_per_second
