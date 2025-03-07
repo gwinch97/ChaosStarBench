@@ -1,7 +1,7 @@
 # Dockerfile - Ubuntu Xenial
 # https://github.com/openresty/docker-openresty
 
-FROM ubuntu:xenial
+FROM ubuntu:16.04
 
 LABEL maintainer="Evan Wies <evan@neomantra.net>"
 
@@ -45,7 +45,6 @@ ARG RESTY_CONFIG_OPTIONS_MORE=""
 
 # These are not intended to be user-specified
 ARG _RESTY_CONFIG_DEPS="--with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} --with-pcre=/tmp/pcre-${RESTY_PCRE_VERSION}"
-
 
 # 1) Install apt dependencies
 # 2) Download and untar OpenSSL, PCRE, and OpenResty
@@ -102,8 +101,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
 
-
-
 # Add additional binaries into PATH for convenience
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
 
@@ -111,26 +108,22 @@ ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/
 COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
+COPY lualongnumber /tmp/lualongnumber
+
 RUN apt-get install -y wget libssl-dev \
     && wget https://github.com/mongodb/mongo-c-driver/releases/download/1.9.3/mongo-c-driver-1.9.3.tar.gz \
     && tar xzf mongo-c-driver-1.9.3.tar.gz \
     && cd mongo-c-driver-1.9.3 \
     && ./configure --disable-automatic-init-and-cleanup \
     && make -j${RESTY_J} \
-    && make -j${RESTY_J} install
-
-RUN luarocks install resty-mongol --server=http://rocks.moonscript.org \
+    && make -j${RESTY_J} install \
+    && luarocks install resty-mongol --server=http://rocks.moonscript.org \
     && luarocks install luasocket \
     && luarocks install chronos \
-    && luarocks install magick
-
-COPY lualongnumber /tmp/lualongnumber
-
-RUN cd /tmp/lualongnumber \
+    && luarocks install magick \
+    && cd /tmp/lualongnumber \
     && make \
     && make install
-
-
 
 # RUN apt-get install -y libboost-all-dev libbson-1.0 libmongoc-1.0-0 \
     # && luarocks install "https://raw.githubusercontent.com/moai/luamongo/master/rockspec/luamongo-scm-0.rockspec"

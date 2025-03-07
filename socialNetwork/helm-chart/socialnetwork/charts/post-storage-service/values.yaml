@@ -7,18 +7,31 @@ ports:
 container:
   command: PostStorageService
   image: lewisrye/social-network-microservices
+  imageVersion: xenial
   name: post-storage-service
   ports: 
   - containerPort: 9090
   resources:
+    requests:
+      cpu: "100m"
     limits:
-      cpu: "50m"
+      cpu: "350m"
 
 configMaps:
+  - name: service-config.json
+    mountPath: /social-network-microservices/config/service-config.json
+    value: service-config
+
   - name: jaeger-config.yml
     mountPath: /social-network-microservices/config/jaeger-config.yml
     value: jaeger-config
 
-  - name: service-config.json
-    mountPath: /social-network-microservices/config/service-config.json
-    value: service-config
+jaeger:
+  agentHost: "jaeger-agent"
+  agentPort: 6831
+  samplerType: "const"
+  samplerParam: 1
+  logSpans: true
+  queueSize: 100
+  bufferFlushInterval: 10
+  disabled: false

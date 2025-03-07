@@ -8,13 +8,13 @@ container:
   args: 
   - /social-network-microservices/config/redis.conf
   image: library/redis
-  imageVersion: 6.2.4
+  imageVersion: 7.4.2
   name: home-timeline-redis
   ports: 
   - containerPort: 6379
   resources:
     limits:
-      cpu: "50m"
+      cpu: "1000m"
 
 configMaps:
   - name: redis.conf

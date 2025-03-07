@@ -112,8 +112,29 @@
                 "runtime": {
                     "type": "string"
                 },
+                "securityContext": {
+                    "properties": {},
+                    "type": "object"
+                },
+                "service": {
+                    "properties": {
+                        "scrape": {
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
+                },
                 "serviceAccount": {
                     "type": "string"
+                },
+                "serviceAccountAnnotations": {
+                    "properties": {},
+                    "type": "object"
                 },
                 "socketPath": {
                     "type": "string"
@@ -317,6 +338,13 @@
                 "serviceAccount": {
                     "type": "string"
                 },
+                "serviceAccountAnnotations": {
+                    "properties": {},
+                    "type": "object"
+                },
+                "serviceAccountCreate": {
+                    "type": "boolean"
+                },
                 "targetNamespace": {
                     "type": "string"
                 },
@@ -338,6 +366,9 @@
                 },
                 "create": {
                     "type": "boolean"
+                },
+                "databaseSecretName": {
+                    "type": "string"
                 },
                 "env": {
                     "properties": {
@@ -380,14 +411,22 @@
                 "extraContainers": {
                     "type": "array"
                 },
-                "gcpClientId": {
-                    "type": "string"
-                },
-                "gcpClientSecret": {
-                    "type": "string"
-                },
                 "gcpSecurityMode": {
-                    "type": "boolean"
+                    "properties": {
+                        "clientId": {
+                            "type": "string"
+                        },
+                        "clientSecret": {
+                            "type": "string"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "existingSecret": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
                 },
                 "hostNetwork": {
                     "type": "boolean"
@@ -539,6 +578,60 @@
         },
         "dnsServer": {
             "properties": {
+                "affinity": {
+                    "properties": {
+                        "podAntiAffinity": {
+                            "properties": {
+                                "preferredDuringSchedulingIgnoredDuringExecution": {
+                                    "items": {
+                                        "properties": {
+                                            "podAffinityTerm": {
+                                                "properties": {
+                                                    "labelSelector": {
+                                                        "properties": {
+                                                            "matchExpressions": {
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "key": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "operator": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "values": {
+                                                                            "items": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "type": "array"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "type": "array"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "topologyKey": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "weight": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
+                },
                 "create": {
                     "type": "boolean"
                 },
@@ -557,7 +650,18 @@
                     "type": "integer"
                 },
                 "image": {
-                    "type": "string"
+                    "properties": {
+                        "registry": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
                 },
                 "imagePullPolicy": {
                     "type": "string"
@@ -638,6 +742,14 @@
             "properties": {
                 "affinity": {
                     "properties": {},
+                    "type": "object"
+                },
+                "busybox": {
+                    "properties": {
+                        "image": {
+                            "type": "string"
+                        }
+                    },
                     "type": "object"
                 },
                 "create": {

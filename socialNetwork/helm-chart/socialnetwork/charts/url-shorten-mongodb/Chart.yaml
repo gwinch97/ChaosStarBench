@@ -3,4 +3,4 @@ name: url-shorten-mongodb
 description: url-shorten-mongodb microservice in SocialNetwork 
 type: application
 version: 0.1.0
-appVersion: 4.4.6
+appVersion: 8.0.4

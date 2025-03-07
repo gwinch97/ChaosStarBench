@@ -8,7 +8,7 @@ ports:
 
 container:
   image: lewisrye/openresty-thrift
-  imageVersion: latest
+  imageVersion: xenial
   name: nginx-thrift
   ports: 
   - containerPort: 8080
@@ -58,14 +58,14 @@ volumes:
   - name: keys
 
 configMaps:
-  - name: jaeger-config.json
-    mountPath: /usr/local/openresty/nginx/jaeger-config.json
-    value: jaeger-config
-
   - name: nginx.conf
     mountPath: /usr/local/openresty/nginx/conf/nginx.conf 
     value: nginx
-    
+
+  - name: jaeger-config.yml
+    mountPath: /social-network-microservices/config/jaeger-config.yml
+    value: jaeger-config
+
 # affinity
 affinity:
   nodeAffinity:
@@ -83,3 +83,13 @@ tolerations:
   operator: "Equal"
   value: "enabled"
   effect: "NoSchedule"
+
+jaeger:
+  agentHost: "jaeger-agent"
+  agentPort: 6831
+  samplerType: "const"
+  samplerParam: 1
+  logSpans: true
+  queueSize: 100
+  bufferFlushInterval: 10
+  disabled: false

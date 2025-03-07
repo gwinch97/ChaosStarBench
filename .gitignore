@@ -6,8 +6,11 @@
 bin
 build
 
+socialNetwork/temp.json
+
 wrk2/wrk
 wrk2/*.[oa]
 wrk2/obj/
 
+socialNetwork/.venv/
 .idea/
