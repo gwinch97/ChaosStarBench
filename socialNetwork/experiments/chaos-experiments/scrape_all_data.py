@@ -41,9 +41,15 @@ def main():
         scroll = '2m'
         batch_size = 1000
 
+        epoch_time_1h_ago = int(time.time() - 3600) * 1000
+
         query = {
             "query": {
-                "match_all": {}
+                "range": {
+                    "startTimeMillis": {
+                        "gte": epoch_time_1h_ago
+                    }
+                }
             }
         }
 
