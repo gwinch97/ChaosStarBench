@@ -1,0 +1,66 @@
+#!/bin/ash
+#
+# Wrapper script around wrk to provide options specific to cache server
+# stressing.
+#
+
+
+[ -z "$1" -o "help" = "$1" -o "-h" = "$1" -o "--help" = "$1" ] && {
+    echo "Usage:"
+    echo "  docker run -ti quay.io/kinvolk/wrk2-cachestress \\" 
+    echo "        [-c <overall-num-of-concurrent-connections>] \\"
+    echo "        [-r <overall-num-of-requests-per-second>] \\"
+    echo "        [-d <duration>] \\"
+    echo "     http[s]://<hostname>/<cacheserver-ip>/path \\"
+    echo "        [ http[s]://<hostname>/<cacheserver-ip>/path] \\"
+    echo "        ..."
+    echo
+    echo "Please NOTE the looks-like-a-http-url-but-actually-isn't URL format:"
+    echo "http[s]://<hostname>/<caching-server-ip>/<path>..."
+    echo
+    exit
+}
+
+conn=10
+rps=10
+dur=60
+servers=""
+
+i=1; next=""
+for arg do
+    [ "$arg" = "-c" ] &&  { next="conn"; continue; }
+    [ "$arg" = "-r" ] &&  { next="rps"; continue; }
+    [ "$arg" = "-d" ] &&  { next="dur"; continue; }
+
+    [ -n "$next" ] && { eval $next="$arg"; next=""; continue; }
+
+    servers="$servers $arg"
+done
+
+
+echo "Running stresser with:"
+echo "conn: $conn"
+echo "rps: $rps"
+echo "duration: $dur"
+echo "servers: $servers"
+echo "---"
+
+sleep 1
+
+> /status
+
+( while ! grep -q "DONE" "/status"; do sleep 1; done;
+  killall -9 nload
+) &
+
+( /usr/local/bin/wrk -s /usr/local/bin/cache-stresser.lua \
+                    --lua-dont-pass-body \
+                    -R "$rps" -c "$conn" -t "$conn" -d "$dur" \
+                    $servers;
+  echo "DONE" ) > /status &
+
+nload -m
+
+reset
+
+cat status

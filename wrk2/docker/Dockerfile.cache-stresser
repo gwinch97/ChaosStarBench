@@ -1,0 +1,22 @@
+FROM alpine as builder
+MAINTAINER Kinvolk
+
+WORKDIR /usr/src
+RUN apk add --update alpine-sdk zlib-dev openssl-dev wget
+COPY ./ /usr/src/wrk2-cache-stresser
+RUN cd wrk2-cache-stresser && \
+    make clean && \
+    make -j && \
+    strip wrk
+
+FROM alpine
+MAINTAINER Kinvolk
+
+RUN apk add --update --no-cache curl nload\
+                        so:libcrypto.so.1.1 so:libssl.so.1.1 so:libgcc_s.so.1
+
+COPY --from=builder /usr/src/wrk2-cache-stresser/wrk /usr/local/bin/
+COPY --from=builder /usr/src/wrk2-cache-stresser/scripts/cache-stresser.lua /usr/local/bin/
+COPY ./docker/setup-cache-stresser /usr/local/bin/
+
+ENTRYPOINT ["/usr/local/bin/setup-cache-stresser"]
