@@ -21,6 +21,7 @@ CPU_UTILISATION_QUERY = 'rate(container_cpu_usage_seconds_total{namespace=~"soci
 CPU_THROTTLING_QUERY = 'rate(container_cpu_cfs_throttled_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])'
 MEMORY_UTILISATION_QUERY = 'sum(container_memory_usage_bytes{namespace=~"socialnetwork", pod=~".*service.*"}) by (pod)'
 INSTANCES_QUERY = 'count by (pod) (kube_pod_info{namespace=~"socialnetwork", pod=~".*service.*"})'
+IO_WRITES_QUERY = 'sum(rate(container_fs_writes_bytes_total{namespace=~"socialnetwork"}[1m]))'
 END_TIME = int(time.time())
 START_TIME = END_TIME - 3600
 STEP = "10s" # get prom data every 10s interval
@@ -34,6 +35,7 @@ PROM_CPU_UTILISATION_FILE = f'{DIRECTORY}/prometheus_cpu_utilisation.json'
 PROM_CPU_THROTTLING_FILE = f'{DIRECTORY}/prometheus_cpu_throttling.json'
 PROM_MEM_UTILISATION_FILE = f'{DIRECTORY}/prometheus_mem_utilisation.json'
 PROM_INSTANCE_FILE = f'{DIRECTORY}/prometheus_instance_count.json'
+PROM_IO_WRITES_FILE = f'{DIRECTORY}/prometheus_io_writes.json'
 
 def main():
     try:
@@ -152,7 +154,7 @@ def main():
     # GET PROMETHEUS INSTANCE COUNT
 
     params = {
-        "query": MEMORY_UTILISATION_QUERY,
+        "query": INSTANCES_QUERY,
         "start": START_TIME,
         "end": END_TIME,
         "step": STEP,
@@ -168,6 +170,27 @@ def main():
         print(f"Instance values saved to: {PROM_INSTANCE_FILE}")
     except Exception as e:
         print("Unable to query Prometheus for instances")
+        print(e)
+
+    # GET PROMETHEUS IO WRITES
+
+    params = {
+        "query": IO_WRITES_QUERY,
+        "start": START_TIME,
+        "end": END_TIME,
+        "step": STEP,
+    }
+
+    try:
+        response = requests.get(url=PROMETHEUS_URL, params=params, timeout=10)
+        data = response.json()
+
+        with open(PROM_IO_WRITES_FILE, 'w') as file:
+            json.dump(data, file, indent=4)
+        
+        print(f"Instance values saved to: {PROM_IO_WRITES_FILE}")
+    except Exception as e:
+        print("Unable to query Prometheus for IO writes")
         print(e)
 
 
