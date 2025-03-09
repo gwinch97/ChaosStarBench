@@ -1,7 +1,6 @@
 1. Create a new deployment of socialnetwork
 2. Run connect to python virtual environment
-3. Run init social graph script -- python3 scripts/init_social_graph.py --graph=socfb-Reed98
-4. Enable autoscaling -- python3 k8scale_custom.py
-5. Navigate to experiments/chaos-experiments directory
-6. Run experiment noted in the xxxxxxx-chaos-command.sh file
-7. Zip the contents of the experiment because it will be a large file
+3. Enable autoscaling -- python3 k8scale_custom.py
+4. Navigate to experiments/chaos-experiments directory
+5. Run experiment noted in the xxxxxxx-chaos-command.sh file
+6. Zip the contents of the experiment because it will be a large file
