@@ -11,6 +11,6 @@ spec:
       - 'socialnetwork'  
   volumePath: /
   path: '/*'
-  delay: '500ms'
+  delay: '350ms'
   percent: 50
   duration: '3600s'
