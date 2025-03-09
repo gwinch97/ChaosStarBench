@@ -2,6 +2,7 @@
 
 # Uses some equations from 'Practical Efficient Microservice Autoscaling' (Md Rajib Hossen, Mohammad A. Islam)
 
+import math
 import os
 import threading
 import time
@@ -26,7 +27,7 @@ PROM_CPU_THROTTLING = f"http://{IP_ADDRESS}:{PROM_PORT}/api/v1/query?query=conta
 
 # SCALING SPECIFIC SETTINGS
 SCALE_DOWN_THRESHOLD_RESPONSE_TIME = 300 # response time in microseconds when scaling down is needed
-SCALE_DOWN_THRESHOLD_UTILISATION = 45.0  # cpu utilisation % when scaling down is needed
+SCALE_DOWN_THRESHOLD_UTILISATION = 49.0  # cpu utilisation % when scaling down is needed
 SCALE_DOWN_THRESHOLD_THROTTLING = 2.5  # cpu throttle % when scaling down is needed
 SCALE_DOWN_GRACE_PERIOD = 15  # time in seconds between first meeting the threshold and then scaling down
 SCALE_UP_THRESHOLD_RESPONSE_TIME = 1000 # response time in microseconds when scaling up is needed
@@ -35,7 +36,7 @@ SCALE_UP_THRESHOLD_THROTTLING = 10.0  # cpu throttling % when scaling up is need
 SCALE_UP_GRACE_PERIOD = 5  # time in seconds between first meeting the threshold and then scaling up
 AFTER_GRACE_PERIOD = 15  # time in seconds after scaling to wait before scaling again
 MINIMUM_INSTANCES = 1  # min amount of instances of each service
-MAXIMUM_INSTANCES = 5  # max amount of instances of each service
+MAXIMUM_INSTANCES = 9  # max amount of instances of each service
 
 # KUBERNETES APIS
 config.load_kube_config()
@@ -113,7 +114,7 @@ def get_replicas(namespace):
             try:
                 # get current number of replicas
                 deployment = apps_api.read_namespaced_deployment(name=microservice_name, namespace=namespace)
-                services[microservice_name]['instances'] = deployment.spec.replicas
+                services[microservice_name]['instances'] = int(deployment.spec.replicas)
             except ApiException:
                 pass
 
@@ -132,7 +133,7 @@ def autoscale():
 
         while True:
             # GET JAEGER TRACE LATENCY
-            # Get epoch time 15 seconds ago (in milliseconds)
+            # Get epoch time 10 seconds ago (in milliseconds)
             epoch_time_10s_ago = int(time.time() - 10) * 1000
 
             # Initialize the query to match traces based on the startTimeMillis field
@@ -142,7 +143,7 @@ def autoscale():
             try:
                 total = es.count(index=index_pattern, body={"query": query['query']})['count']
             except Exception:
-                print("Unable to query Jaeger response time")
+                print("No traces found")
                 total = 0
 
             if total != 0:
@@ -163,10 +164,17 @@ def autoscale():
                 print("Unable to query Prometheus CPU utilisation")
                 metrics = []
             
+            all_services = {}
             for metric in metrics:
                 service_name = remove_hex_code(metric["metric"]["pod"])  # pod name
                 values = metric["values"]  # pod usage as [timestamp, value]
                 cpu_usage = float(values[-1][1])  # get most recent value
+                if service_name not in all_services:
+                    all_services[service_name] = cpu_usage
+                else:
+                    all_services[service_name] += cpu_usage # ensures all pods are accounted for
+            
+            for service_name, cpu_usage in all_services.items():
                 services[service_name]['cpu_utilisation'] = add_to_list(cpu_usage, services[service_name]['cpu_utilisation'])
 
             # GET PROMETHEUS CPU THROTTLING
@@ -177,10 +185,17 @@ def autoscale():
                 print("Unable to query Prometheus CPU throttling")
                 metrics = []
 
+            all_services = {}
             for metric in metrics:
                 service_name = remove_hex_code(metric["metric"]["pod"])  # pod name
                 values = metric["values"]  # pod throttling as [timestamp, value]
                 cpu_throttling = float(values[-1][1])  # get most recent value
+                if service_name not in all_services:
+                    all_services[service_name] = cpu_throttling
+                else:
+                    all_services[service_name] += cpu_throttling # ensures all pods are accounted for
+            
+            for service_name, cpu_throttling in all_services.items():
                 services[service_name]['cpu_throttling'] = add_to_list(cpu_throttling, services[service_name]['cpu_throttling'])
 
             print("---------------------------------------------------------------------")
@@ -188,10 +203,10 @@ def autoscale():
             print("---------------------------------------------------------------------")
 
             for service_name, service_data in services.items():
-                instances = service_data["instances"]
-                cpu_util = float(service_data['cpu_utilisation'][0])
-                cpu_throttling = float(service_data['cpu_throttling'][0])
-                response_time = service_data["response_time"][0]
+                instances = int(service_data["instances"])
+                cpu_util = float(service_data['cpu_utilisation'][0] / instances)
+                cpu_throttling = float(service_data['cpu_throttling'][0] / instances)
+                response_time = int(service_data["response_time"][0])
 
                 # print the data into the table
                 print(f"{service_name:<{21}} ({instances}x) "
@@ -202,7 +217,7 @@ def autoscale():
                 # check if you need to scale the service
                 # based on whether you are allowed to add or remove instances
                 # and whether they are already attempting to scale
-                if service_data['instances'] < MAXIMUM_INSTANCES and service_name not in running_threads:
+                if instances < MAXIMUM_INSTANCES and service_name not in running_threads:
                     should_scale_up = (response_time > SCALE_UP_THRESHOLD_RESPONSE_TIME 
                                        or cpu_util > SCALE_UP_THRESHOLD_UTILISATION 
                                        or cpu_throttling > SCALE_UP_THRESHOLD_THROTTLING)
@@ -211,13 +226,13 @@ def autoscale():
                         thread = threading.Thread(target=scale_up, args=(service_name,), name=f"{service_name}")
                         running_threads.append(f"{service_name}")
                         thread.start()
-                elif service_data['instances'] > MINIMUM_INSTANCES and service_name not in running_threads:
+                elif instances > MINIMUM_INSTANCES and service_name not in running_threads:
                     should_scale_down = (response_time < SCALE_DOWN_THRESHOLD_RESPONSE_TIME 
                                          and cpu_util < SCALE_DOWN_THRESHOLD_UTILISATION 
                                          and cpu_throttling < SCALE_DOWN_THRESHOLD_THROTTLING)
 
                     if should_scale_down:
-                        reduction = (service_data['instances'] - 1) * min((SCALE_DOWN_THRESHOLD_RESPONSE_TIME - service_data['response_time']) / SCALE_DOWN_THRESHOLD_RESPONSE_TIME, 1)
+                        reduction = math.floor((instances - 1) * min((SCALE_DOWN_THRESHOLD_RESPONSE_TIME - instances) / SCALE_DOWN_THRESHOLD_RESPONSE_TIME, 1))
                         thread = threading.Thread(target=scale_down, args=(service_name,reduction,), name=f"{service_name}")
                         running_threads.append(f"{service_name}")
                         thread.start()
@@ -241,7 +256,7 @@ def scale_up(service_name):
     """Scales up the given service"""
     time.sleep(SCALE_UP_GRACE_PERIOD)  # check after grace period before scaling
 
-    response_time = services[service_name]['response_time'][0]
+    response_time = int(services[service_name]['response_time'][0])
     cpu_util = float(services[service_name]['cpu_utilisation'][0])
     cpu_throttling = float(services[service_name]['cpu_throttling'][0])
 
@@ -250,15 +265,18 @@ def scale_up(service_name):
                                  or cpu_throttling > SCALE_UP_THRESHOLD_THROTTLING)
 
     if still_exceeding_threshold:
+        # calculate new number of instances
+        new_instances = int(min(MAXIMUM_INSTANCES, services[service_name]['instances'] + 1))
+
         # read namespace
         deployment = apps_api.read_namespaced_deployment(name=service_name, namespace='socialnetwork')
-        deployment.spec.replicas = services[service_name]['instances'] + 1
+        deployment.spec.replicas = new_instances
 
         # patch namespace
         apps_api.patch_namespaced_deployment(name=service_name, namespace='socialnetwork', body=deployment)
 
-        services[service_name]['instances'] += 1  # update the number of instances in the service list
-        print(f"↑ {service_name} scaled UP to {services[service_name]['instances']} instance(s)")
+        services[service_name]['instances'] = new_instances  # update the number of instances in the service list
+        print(f"↑ {service_name} scaled UP to {new_instances} instance(s)")
         time.sleep(AFTER_GRACE_PERIOD)  # wait before allowing to scale up or down again
 
     running_threads.remove(f"{service_name}")  # remove thread from list so that it can run again
@@ -268,7 +286,7 @@ def scale_down(service_name, reduction):
     """Scales down the given service"""
     time.sleep(SCALE_DOWN_GRACE_PERIOD)  # check after grace period before scaling
 
-    response_time = services[service_name]['response_time'][0]
+    response_time = int(services[service_name]['response_time'][0])
     cpu_util = float(services[service_name]['cpu_utilisation'][0])
     cpu_throttling = float(services[service_name]['cpu_throttling'][0])
 
@@ -277,15 +295,18 @@ def scale_down(service_name, reduction):
                                  and cpu_throttling < SCALE_DOWN_THRESHOLD_THROTTLING)
 
     if still_under_threshold:
+        # calculate new number of instances
+        new_instances = int(max(MINIMUM_INSTANCES, services[service_name]['instances'] - reduction))
+
         # read namespace
         deployment = apps_api.read_namespaced_deployment(name=service_name, namespace='socialnetwork')
-        deployment.spec.replicas = services[service_name]['instances'] - reduction
+        deployment.spec.replicas = new_instances
 
         # patch namespace
         apps_api.patch_namespaced_deployment(name=service_name, namespace='socialnetwork', body=deployment)
 
-        services[service_name]['instances'] -= reduction  # update the number of instances in the service list
-        print(f"↓ {service_name} scaled DOWN to {services[service_name]['instances']} instance(s)")
+        services[service_name]['instances'] = new_instances  # update the number of instances in the service list
+        print(f"↓ {service_name} scaled DOWN to {new_instances} instance(s)")
         time.sleep(AFTER_GRACE_PERIOD)  # wait before allowing to scale up or down again
 
     running_threads.remove(f"{service_name}")  # remove thread from list so that it can run again

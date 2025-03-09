@@ -138,7 +138,7 @@ def main():
         with open(PROM_IO_WRITES_FILE, 'w') as file:
             json.dump(data, file, indent=4)
         
-        print(f"Instance values saved to: {PROM_IO_WRITES_FILE}")
+        print(f"IO write values saved to: {PROM_IO_WRITES_FILE}")
     except Exception as e:
         print("Unable to query Prometheus for IO writes")
         print(e)
