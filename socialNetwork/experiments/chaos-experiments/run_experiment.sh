@@ -73,3 +73,4 @@ python3 experiments/chaos-experiments/scrape_all_data.py
 
 echo "----- EXPERIMENT COMPLETE -----"
 echo "Experiment results and metrics are stored in the socialNetwork/.results directory"
+kubectl delete -f experiments/chaos-experiments/$experiment/$yaml

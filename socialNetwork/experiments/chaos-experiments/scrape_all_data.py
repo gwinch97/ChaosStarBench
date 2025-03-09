@@ -20,6 +20,7 @@ PROMETHEUS_URL = f"http://{IP_ADDRESS}:{PROM_PORT}/api/v1/query_range"
 CPU_UTILISATION_QUERY = 'rate(container_cpu_usage_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])'
 CPU_THROTTLING_QUERY = 'rate(container_cpu_cfs_throttled_seconds_total{namespace=~"socialnetwork", pod=~".*service.*"}[1m])'
 MEMORY_UTILISATION_QUERY = 'sum(container_memory_usage_bytes{namespace=~"socialnetwork", pod=~".*service.*"}) by (pod)'
+INSTANCES_QUERY = 'count by (pod) (kube_pod_info{namespace=~"socialnetwork", pod=~".*service.*"})'
 END_TIME = int(time.time())
 START_TIME = END_TIME - 3600
 STEP = "10s" # get prom data every 10s interval
@@ -32,6 +33,7 @@ JAEGER_FILE = f'{DIRECTORY}/jaeger_traces.json'
 PROM_CPU_UTILISATION_FILE = f'{DIRECTORY}/prometheus_cpu_utilisation.json'
 PROM_CPU_THROTTLING_FILE = f'{DIRECTORY}/prometheus_cpu_throttling.json'
 PROM_MEM_UTILISATION_FILE = f'{DIRECTORY}/prometheus_mem_utilisation.json'
+PROM_INSTANCE_FILE = f'{DIRECTORY}/prometheus_instance_count.json'
 
 def main():
     try:
@@ -102,7 +104,7 @@ def main():
         
         print(f"CPU utilisation values saved to: {PROM_CPU_UTILISATION_FILE}")
     except Exception as e:
-        print("Unable to query Prometheus CPU utilisation")
+        print("Unable to query Prometheus for CPU utilisation")
         print(e)
 
     # GET PROMETHEUS CPU THROTTLING DATA
@@ -123,7 +125,7 @@ def main():
         
         print(f"CPU throttling values saved to: {PROM_CPU_THROTTLING_FILE}")
     except Exception as e:
-        print("Unable to query Prometheus CPU throttling")
+        print("Unable to query Prometheus for CPU throttling")
         print(e)
 
     # GET PROMETHEUS MEM UTILISATION DATA
@@ -144,7 +146,28 @@ def main():
         
         print(f"Memory utilisation values saved to: {PROM_MEM_UTILISATION_FILE}")
     except Exception as e:
-        print("Unable to query Prometheus memory utilisation")
+        print("Unable to query Prometheus for memory utilisation")
+        print(e)
+
+    # GET PROMETHEUS INSTANCE COUNT
+
+    params = {
+        "query": MEMORY_UTILISATION_QUERY,
+        "start": START_TIME,
+        "end": END_TIME,
+        "step": STEP,
+    }
+
+    try:
+        response = requests.get(url=PROMETHEUS_URL, params=params, timeout=10)
+        data = response.json()
+
+        with open(PROM_INSTANCE_FILE, 'w') as file:
+            json.dump(data, file, indent=4)
+        
+        print(f"Instance values saved to: {PROM_INSTANCE_FILE}")
+    except Exception as e:
+        print("Unable to query Prometheus for instances")
         print(e)
 
 
