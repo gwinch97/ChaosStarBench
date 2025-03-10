@@ -4,6 +4,7 @@
 
 import math
 import os
+import sys
 import threading
 import time
 
@@ -110,7 +111,7 @@ def disable_hpa(namespace):
 def get_replicas(namespace):
     """Attempts to get the amount of replicas for each pod"""
     try:
-        for microservice_name in services.keys():
+        for microservice_name in services:
             try:
                 # get current number of replicas
                 deployment = apps_api.read_namespaced_deployment(name=microservice_name, namespace=namespace)
@@ -249,7 +250,7 @@ def autoscale():
         if os.path.isfile(OUTPUT_FILE):
             os.remove(OUTPUT_FILE)
 
-        exit()
+        sys.exit(0)
 
 
 def scale_up(service_name):
