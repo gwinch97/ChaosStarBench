@@ -11,4 +11,4 @@ spec:
       app: compose-post-service
   action: pod-failure
   mode: all # all pods named compose-post-service
-  duration: 250s
+  duration: 300s

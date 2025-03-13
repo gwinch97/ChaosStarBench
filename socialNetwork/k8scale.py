@@ -133,6 +133,11 @@ def autoscale():
         batch_size = 500
 
         while True:
+            for microservice_name in services.keys():
+                # get new number of replicas (instances)
+                deployment = apps_api.read_namespaced_deployment(name=microservice_name, namespace='socialnetwork')
+                services[microservice_name]['instances'] = int(deployment.spec.replicas) # get new number of replicas (instances)
+
             # GET JAEGER TRACE LATENCY
             # Get epoch time 10 seconds ago (in milliseconds)
             epoch_time_10s_ago = int(time.time() - 10) * 1000
@@ -200,7 +205,7 @@ def autoscale():
                 services[service_name]['cpu_throttling'] = add_to_list(cpu_throttling, services[service_name]['cpu_throttling'])
 
             print("---------------------------------------------------------------------")
-            print("SERVICE NAME               | UTILISATION | THROTTLING | RESPONSE TIME")
+            print("SERVICE NAME (instances)   | UTILISATION | THROTTLING | RESPONSE TIME")
             print("---------------------------------------------------------------------")
 
             for service_name, service_data in services.items():

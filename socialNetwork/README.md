@@ -80,6 +80,18 @@ bash k8startup.sh <cpus_per_node> <mem_per_node> <nodes_total> <num_instances>
 ```
 > A good starting point: `bash k8startup.sh 4 8000 2 1` *(scale up or down as necessary)*
 
+### Run the autoscaling script
+
+To run the built in Kubernetes HPA, run
+```bash
+bash k8scale.sh
+```
+
+And to run the more extensively customisable Python custom autoscaler, run
+```bash
+python3 k8scale.py
+```
+
 ### Construct social graphs
 
 You need to construct social graphs to replicate real social connections between accounts. Register users and construct social graph by running: 
