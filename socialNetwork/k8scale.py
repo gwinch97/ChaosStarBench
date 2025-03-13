@@ -27,7 +27,7 @@ PROM_CPU_UTILISATION = f"http://{IP_ADDRESS}:{PROM_PORT}/api/v1/query?query=cont
 PROM_CPU_THROTTLING = f"http://{IP_ADDRESS}:{PROM_PORT}/api/v1/query?query=container_cpu_cfs_throttled_seconds_total{{namespace='socialnetwork', pod=~'.*service.*'}}[1m]"
 
 # SCALING SPECIFIC SETTINGS
-SCALE_DOWN_THRESHOLD_RESPONSE_TIME = 300 # response time in microseconds when scaling down is needed
+SCALE_DOWN_THRESHOLD_RESPONSE_TIME = 500 # response time in microseconds when scaling down is needed
 SCALE_DOWN_THRESHOLD_UTILISATION = 49.0  # cpu utilisation % when scaling down is needed
 SCALE_DOWN_THRESHOLD_THROTTLING = 2.5  # cpu throttle % when scaling down is needed
 SCALE_DOWN_GRACE_PERIOD = 15  # time in seconds between first meeting the threshold and then scaling down
