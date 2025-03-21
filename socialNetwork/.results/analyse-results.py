@@ -17,17 +17,17 @@ def main():
     # load all data
     try:
         with open(f'./{experiment_folder}/prometheus_cpu_utilisation.json', 'r') as cpu_utilisation_file:
-            cpu_utilisation_data = json.load(cpu_utilisation_file)
+            cpu_utilisation_data = json.load(cpu_utilisation_file)['data']['result']
         with open(f'./{experiment_folder}/prometheus_cpu_throttling.json', 'r') as cpu_throttling_file:
-            cpu_throttling_data = json.load(cpu_throttling_file)
+            cpu_throttling_data = json.load(cpu_throttling_file)['data']['result']
         with open(f'./{experiment_folder}/prometheus_instance_count.json', 'r') as instance_count_file:
-            instance_count_data = json.load(instance_count_file)
+            instance_count_data = json.load(instance_count_file)['data']['result']
         with open(f'./{experiment_folder}/prometheus_io_writes.json', 'r') as io_writes_file:
-            io_writes_data = json.load(io_writes_file)
+            io_writes_data = json.load(io_writes_file)['data']['result']
         with open(f'./{experiment_folder}/prometheus_mem_utilisation.json', 'r') as mem_utilisation_file:
-            mem_utilisation_data = json.load(mem_utilisation_file)
+            mem_utilisation_data = json.load(mem_utilisation_file)['data']['result']
         with open(f'./{experiment_folder}/prometheus_network_transmit.json', 'r') as network_transmit_file:
-            network_transmit_data = json.load(network_transmit_file)
+            network_transmit_data = json.load(network_transmit_file)['data']['result']
     except FileNotFoundError:
         print(f'Files could not be found at {experiment_folder}')
         sys.exit(0)
@@ -58,33 +58,52 @@ def main():
     """
     PROCESS CPU UTILISATION
     """
-    start_time = cpu_utilisation_data["data"]["result"][0]["values"][0][0]
+    cpu_utilisation = {}
+    for result in cpu_utilisation_data:
+        values = result['values']
+        service_name = get_name(result['metric']['pod'])
+        values_dict = {}
 
-    service_info = {}
-    for result in cpu_utilisation_data['data']['result']:
-        ms_name = get_name(result['metric']['pod'])
-        if ms_name in service_info.keys():
-            service_info[ms_name].append(result)
-        else:
-            service_info[ms_name] = [result]
+        if service_name in cpu_utilisation.keys():
+            values_dict = cpu_utilisation[service_name]
 
-    for instance_info in service_info.values():
-        for instance in instance_info:
-            start_time = instance['values'][0][0]
-            for timestep in instance['values']:
-                time = int(timestep[0] - start_time)
-                value = float(timestep[1])
-                ms_name = get_name(instance['metric']['pod'])
-                
-                if time not in cpu_utilisation[ms_name]:
-                    cpu_utilisation[ms_name][time] = value
-                else:
-                    cpu_utilisation[ms_name][time] = (cpu_utilisation[ms_name][time] + value) / 2
+        for value in values:
+            timestamp = int(value[0])
+            utilisation = float(value[1])
 
-    for servicename, time_data in cpu_utilisation.items():
-        if servicename=='compose-post-service':
-            times = list(time_data.keys())
-            values = list(time_data.values())
+            if timestamp in values_dict.keys():
+                values_dict[timestamp] += utilisation
+            else:
+                values_dict[timestamp] = utilisation
+        
+        cpu_utilisation[service_name] = values_dict
+
+    # get start time for the experiment
+    start_time = None
+    for service_name, values_dict in cpu_utilisation.items():
+        for timestamp in values_dict.keys():
+            if start_time is None:
+                start_time = timestamp
+            elif start_time > timestamp:
+                start_time = timestamp
+
+
+    # move timestamp relative to 0-3600
+    new_data = {}
+    for service_name, values_dict in cpu_utilisation.items():
+        for timestamp, value in values_dict.items():
+            if service_name not in new_data:
+                new_data[service_name] = {}
+            new_data[service_name][timestamp - start_time] = value
+
+    cpu_utilisation = new_data
+    for service_name, values_dict in cpu_utilisation.items():
+        if service_name == 'compose-post-service':
+            # sort dict based on timestamp
+            ordered_data = dict(sorted(values_dict.items()))
+
+            times = list(ordered_data.keys())
+            values = list(ordered_data.values())
             
             ax[0].plot(times, values)
             ax[0].axvline(1800, color='r', linestyle='--')
@@ -94,64 +113,70 @@ def main():
     """
     PROCESS CPU THROTTLING
     """
-    start_time = cpu_throttling_data["data"]["result"][0]["values"][0][0]
+    cpu_throttling = {}
+    for result in cpu_throttling_data:
+        values = result['values']
+        service_name = get_name(result['metric']['pod'])
+        values_dict = {}
 
-    for result in cpu_throttling_data['data']['result']:
-        ms_name = get_name(result['metric']['pod'])
-        if ms_name in service_info.keys():
-            service_info[ms_name].append(result)
-        else:
-            service_info[ms_name] = [result]
+        if service_name in cpu_throttling.keys():
+            values_dict = cpu_throttling[service_name]
 
-    for instance_info in service_info.values():
-        for instance in instance_info:
-            for timestep in instance['values']:
-                time = int(timestep[0] - start_time)
-                value = float(timestep[1])
-                ms_name = get_name(instance['metric']['pod'])
-                
-                if time not in cpu_throttling[ms_name]:
-                    cpu_throttling[ms_name][time] = value
-                else:
-                    cpu_throttling[ms_name][time] = (cpu_throttling[ms_name][time] + value) / 2
+        for value in values:
+            timestamp = int(value[0] - start_time)
+            throttling = float(value[1])
 
-    for servicename, time_data in cpu_throttling.items():
-        if servicename=='compose-post-service':
-            times = list(time_data.keys())
-            values = list(time_data.values())
+            if timestamp in values_dict.keys():
+                values_dict[timestamp] += throttling
+            else:
+                values_dict[timestamp] = throttling
+        
+        cpu_throttling[service_name] = values_dict
+
+    for service_name, values_dict in cpu_throttling.items():
+        if service_name == 'compose-post-service':
+            # sort dict based on timestamp
+            ordered_data = dict(sorted(values_dict.items()))
+
+            times = list(ordered_data.keys())
+            values = list(ordered_data.values())
             
             ax[1].plot(times, values)
             ax[1].axvline(1800, color='r', linestyle='--')
-            ax[1].set_ylabel('CPU Throttling (%)')
+            ax[1].set_ylabel('CPU Throttling (%))')
+            ax[1].set_ylim(0, 1)
             ax[1].set_xlabel('Time (s)')
 
     """
     PROCESS INSTANCE COUNT
     """
-    service_info = {}
-    for result in instance_count_data["data"]["result"]:
-        ms_name = get_name(result['metric']['pod'])
-        if ms_name in service_info.keys():
-            service_info[ms_name].append(result)
-        else:
-            service_info[ms_name] = [result]
+    instance_count = {}
+    for result in instance_count_data:
+        values = result['values']
+        service_name = get_name(result['metric']['pod'])
+        values_dict = {}
 
-    for instance_info in service_info.values():
-        for instance in instance_info:
-            for timestep in instance['values']:
-                time = int(timestep[0] - start_time)
-                value = float(timestep[1])
-                ms_name = get_name(instance['metric']['pod'])
-                
-                if time not in instance_count[ms_name]:
-                    instance_count[ms_name][time] = value
-                else:
-                    instance_count[ms_name][time] = instance_count[ms_name][time] + value
+        if service_name in instance_count.keys():
+            values_dict = instance_count[service_name]
+
+        for value in values:
+            timestamp = int(value[0] - start_time)
+            instances = float(value[1])
+
+            if timestamp in values_dict.keys():
+                values_dict[timestamp] += instances
+            else:
+                values_dict[timestamp] = instances
         
-    for servicename, time_data in instance_count.items():
+        instance_count[service_name] = values_dict
+        
+    for servicename, time_data in instance_count.items():        
         if servicename=='compose-post-service':
-            times = list(time_data.keys())
-            values = list(time_data.values())
+            # sort dict based on timestamp
+            ordered_data = dict(sorted(values_dict.items()))
+
+            times = list(ordered_data.keys())
+            values = list(ordered_data.values())
             
             ax[2].plot(times, values)
             ax[2].axvline(1800, color='r', linestyle='--')
@@ -163,9 +188,7 @@ def main():
     """
     PROCESS IO WRITES
     """
-    start_time = io_writes_data["data"]["result"][0]["values"][0][0]
-
-    for result in io_writes_data["data"]["result"]:
+    for result in io_writes_data:
         for values in result["values"]:
             time = int(values[0] - start_time)
             value = float(values[1])
@@ -183,51 +206,47 @@ def main():
     ax[3].set_ylabel('IO Writes (Bytes)')
     ax[3].set_xlabel('Time (s)')
 
-    plt.tight_layout()
-    plt.savefig(f'{sys.argv[1]}.png')
-
     """
     PROCESS MEMORY UTILISATION
     """
-    start_time =  mem_utilisation_data["data"]["result"][0]["values"][0][0]
+    mem_utilisation = {}
+    for result in mem_utilisation_data:
+        values = result['values']
+        service_name = get_name(result['metric']['pod'])
+        values_dict = {}
 
-    service_info = {}
-    for result in mem_utilisation_data['data']['result']:
-        ms_name = get_name(result['metric']['pod'])
-        if ms_name in service_info.keys():
-            service_info[ms_name].append(result)
-        else:
-            service_info[ms_name] = [result]
+        if service_name in mem_utilisation.keys():
+            values_dict = mem_utilisation[service_name]
 
-    for instance_info in service_info.values():
-        for instance in instance_info:
-            start_time = instance['values'][0][0]
-            for timestep in instance['values']:
-                time = int(timestep[0] - start_time)
-                value = float(timestep[1])
-                ms_name = get_name(instance['metric']['pod'])
-                
-                if time not in mem_utilisation[ms_name]:
-                    mem_utilisation[ms_name][time] = value
-                else:
-                    mem_utilisation[ms_name][time] = (mem_utilisation[ms_name][time] + value) / 2
+        for value in values:
+            timestamp = int(value[0] - start_time)
+            utilisation = float(value[1])
 
-    for servicename, time_data in mem_utilisation.items():
-        if servicename=='compose-post-service':
-            times = list(time_data.keys())
-            values = list(time_data.values())
+            if timestamp in values_dict.keys():
+                values_dict[timestamp] += utilisation
+            else:
+                values_dict[timestamp] = utilisation
+        
+        mem_utilisation[service_name] = values_dict
+
+    
+    for service_name, values_dict in mem_utilisation.items():
+        if service_name == 'compose-post-service':
+            # sort dict based on timestamp
+            ordered_data = dict(sorted(values_dict.items()))
+
+            times = list(ordered_data.keys())
+            values = list(ordered_data.values())
             
             ax[4].plot(times, values)
             ax[4].axvline(1800, color='r', linestyle='--')
-            ax[4].set_ylabel('Mem Use (Bytes)')
+            ax[4].set_ylabel('Mem Use (Bytes))')
             ax[4].set_xlabel('Time (s)')
 
     """
     PROCESS NETWORK TRANSMITS
     """
-    start_time = network_transmit_data["data"]["result"][0]["values"][0][0]
-
-    for result in network_transmit_data["data"]["result"]:
+    for result in network_transmit_data:
         for values in result["values"]:
             time = int(values[0] - start_time)
             value = float(values[1])
