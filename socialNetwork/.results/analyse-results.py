@@ -128,6 +128,37 @@ def main():
     """
     PROCESS INSTANCE COUNT
     """
+    service_info = {}
+    for result in instance_count_data["data"]["result"]:
+        ms_name = get_name(result['metric']['pod'])
+        if ms_name in service_info.keys():
+            service_info[ms_name].append(result)
+        else:
+            service_info[ms_name] = [result]
+
+    for instance_info in service_info.values():
+        for instance in instance_info:
+            for timestep in instance['values']:
+                time = int(timestep[0] - start_time)
+                value = float(timestep[1])
+                ms_name = get_name(instance['metric']['pod'])
+                
+                if time not in instance_count[ms_name]:
+                    instance_count[ms_name][time] = value
+                else:
+                    instance_count[ms_name][time] = instance_count[ms_name][time] + value
+        
+    for servicename, time_data in instance_count.items():
+        if servicename=='compose-post-service':
+            times = list(time_data.keys())
+            values = list(time_data.values())
+            
+            ax[2].plot(times, values)
+            ax[2].axvline(1800, color='r', linestyle='--')
+            ax[2].set_ylabel('Instance Count')
+            ax[2].set_ylim(0, 10)
+            ax[2].set_yticks(range(1, 10, 2))
+            ax[2].set_xlabel('Time (s)')
 
     """
     PROCESS IO WRITES
