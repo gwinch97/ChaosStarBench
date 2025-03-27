@@ -143,7 +143,7 @@ def main():
             
             ax[1].plot(times, values)
             ax[1].axvline(1800, color='r', linestyle='--')
-            ax[1].set_ylabel('CPU Throttling (%))')
+            ax[1].set_ylabel('CPU Throttling (%)')
             ax[1].set_ylim(0, 1)
             ax[1].set_xlabel('Time (s)')
 
@@ -240,7 +240,7 @@ def main():
             
             ax[4].plot(times, values)
             ax[4].axvline(1800, color='r', linestyle='--')
-            ax[4].set_ylabel('Mem Use (Bytes))')
+            ax[4].set_ylabel('Mem Use (Bytes)')
             ax[4].set_xlabel('Time (s)')
 
     """
