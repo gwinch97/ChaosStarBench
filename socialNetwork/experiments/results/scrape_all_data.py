@@ -3,11 +3,18 @@
 import json
 import os
 import requests
+import sys
 import time
 
 from datetime import datetime
 from elasticsearch import Elasticsearch, helpers
 from tqdm import tqdm
+
+if len(sys.argv) == 2:
+    duration = sys.argv[1]
+else:
+    print('Usage: python3 scrape_all_data.py <duration>')
+    sys.exit(0)
 
 # GET DEPLOYMENT IP AND PORTS
 IP_ADDRESS = "127.0.0.1"
@@ -24,7 +31,7 @@ INSTANCES_QUERY = 'count by (pod) (kube_pod_info{namespace=~"socialnetwork", pod
 IO_WRITES_QUERY = 'sum(rate(container_fs_writes_bytes_total{namespace=~"socialnetwork"}[1m]))'
 NETWORK_TRANSMIT_QUERY = 'rate(node_network_transmit_bytes_total[1m])'
 END_TIME = int(time.time())
-START_TIME = END_TIME - 3600
+START_TIME = END_TIME - duration
 STEP = "10s" # get prom data every 10s interval
 INDEX_PATTERN = "jaeger-span-*"
 
@@ -175,13 +182,13 @@ def main():
         scroll = '2m'
         batch_size = 1000
 
-        epoch_time_1h_ago = int(time.time() - 3600) * 1000
+        epoch_start_time = int(time.time() - duration) * 1000
 
         query = {
             "query": {
                 "range": {
                     "startTimeMillis": {
-                        "gte": epoch_time_1h_ago
+                        "gte": epoch_start_time
                     }
                 }
             }
