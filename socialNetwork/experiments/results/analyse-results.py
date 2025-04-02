@@ -8,10 +8,11 @@ def get_name(name):
 
 
 def main():
-    if len(sys.argv) == 2:
-        experiment_folder = sys.argv[1]
+    if len(sys.argv) == 3:
+        figure_title = sys.argv[1]
+        experiment_folder = sys.argv[2]
     else:
-        print('Usage: python3 analyse-results.py results_folder_name where results_folder_name is the folder that contains all JSON files')
+        print('Usage: python3 analyse-results.py figure_title results_folder_name (where results_folder_name is the folder that contains all JSON files)')
         sys.exit(0)
 
     # load all data
@@ -54,6 +55,7 @@ def main():
     network_transmit = {}
 
     fig, ax = plt.subplots(6, 1, figsize=(10, 12))
+    fig.suptitle(figure_title, fontsize=32)
 
     """
     PROCESS CPU UTILISATION
@@ -78,15 +80,24 @@ def main():
         
         cpu_utilisation[service_name] = values_dict
 
-    # get start time for the experiment
+    # get start and end times for the experiment
     start_time = None
+    end_time = None
     for service_name, values_dict in cpu_utilisation.items():
         for timestamp in values_dict.keys():
+            # get start and end times
+
             if start_time is None:
                 start_time = timestamp
-            elif start_time > timestamp:
-                start_time = timestamp
+            if end_time is None:
+                end_time = timestamp
 
+            if start_time > timestamp:
+                start_time = timestamp
+            if end_time < timestamp:
+                end_time = timestamp
+    
+    chaos_injection_time = (end_time - start_time) / 2
 
     # move timestamp relative to 0-3600
     new_data = {}
@@ -106,7 +117,7 @@ def main():
             values = list(ordered_data.values())
             
             ax[0].plot(times, values)
-            ax[0].axvline(1800, color='r', linestyle='--')
+            ax[0].axvline(chaos_injection_time, color='r', linestyle='--')
             ax[0].set_ylabel('CPU Use (Cores)')
             ax[0].set_xlabel('Time (s)')
 
@@ -142,7 +153,7 @@ def main():
             values = list(ordered_data.values())
             
             ax[1].plot(times, values)
-            ax[1].axvline(1800, color='r', linestyle='--')
+            ax[1].axvline(chaos_injection_time, color='r', linestyle='--')
             ax[1].set_ylabel('CPU Throttling (%)')
             ax[1].set_ylim(0, 1)
             ax[1].set_xlabel('Time (s)')
@@ -179,7 +190,7 @@ def main():
             values = list(ordered_data.values())
             
             ax[2].plot(times, values)
-            ax[2].axvline(1800, color='r', linestyle='--')
+            ax[2].axvline(chaos_injection_time, color='r', linestyle='--')
             ax[2].set_ylabel('Instance Count')
             ax[2].set_ylim(0, 10)
             ax[2].set_yticks(range(1, 10, 2))
@@ -202,7 +213,7 @@ def main():
     values = list(io_writes.values())
 
     ax[3].plot(times, values)
-    ax[3].axvline(1800, color='r', linestyle='--')
+    ax[3].axvline(chaos_injection_time, color='r', linestyle='--')
     ax[3].set_ylabel('IO Writes (Bytes)')
     ax[3].set_xlabel('Time (s)')
 
@@ -239,7 +250,7 @@ def main():
             values = list(ordered_data.values())
             
             ax[4].plot(times, values)
-            ax[4].axvline(1800, color='r', linestyle='--')
+            ax[4].axvline(chaos_injection_time, color='r', linestyle='--')
             ax[4].set_ylabel('Mem Use (Bytes)')
             ax[4].set_xlabel('Time (s)')
 
@@ -260,11 +271,11 @@ def main():
     values = list(network_transmit.values())
 
     ax[5].plot(times, values)
-    ax[5].axvline(1800, color='r', linestyle='--')
+    ax[5].axvline(chaos_injection_time, color='r', linestyle='--')
     ax[5].set_ylabel('Network Transmits (Bytes)')
     ax[5].set_xlabel('Time (s)')
 
-    plt.savefig(f'{sys.argv[1]}.png')
+    plt.savefig(f'{sys.argv[2]}/{sys.argv[1]}.png')
 
 
 if __name__ == "__main__":
