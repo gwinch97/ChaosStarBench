@@ -3,7 +3,7 @@
 # Check if 6 arguments are provided
 if [ "$#" -ne 6 ]; then
     echo "Error: you must provide 6 arguments."
-    echo "Usage: ./run_experiment.sh <experiment> <severity=low/medium/high> <threads> <connections> <duration> <requests_per_second>"
+    echo "Usage: run_chaosd_experiment.sh <experiment> <severity=low/medium/high> <threads> <connections> <duration> <requests_per_second>"
     exit 1
 fi
 
@@ -32,7 +32,7 @@ done
 if [ "$experiment_found" == false ]; then
     echo "Error: Experiment '$experiment' is not found."
     echo "Supported experiments (case sensitive):"
-    echo "iochaos networkchaos physicalmachinechaos podchaos redischaos stresschaos"
+    echo "networkchaos physicalmachinechaos redischaos stresschaos"
     exit 1
 fi
 
@@ -56,6 +56,7 @@ esac
 duration_half=$((duration / 2))
 
 cd ../../
+# if this doesn't run, ensure there is a .venv folder inside socialnetwork
 source .venv/bin/activate
 # if this doesn't run, ensure you ran `make` on wrk2 directory
 
@@ -70,7 +71,8 @@ echo "----- RUN WORKLOAD AFTER FAULT -----"
 ../wrk2/wrk -D exp -t $threads -c $connections -d $duration_half -L -s ./wrk2/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R $requests_per_second
 
 echo "----- SCRAPING METRICS -----"
-python3 experiments/chaos-experiments/scrape_all_data.py
+cd experiments/results/
+python3 scrape_all_data.py
 
 echo "----- EXPERIMENT COMPLETE -----"
-echo "Experiment results and metrics are stored in the socialNetwork/.results directory"
+echo "Experiment results and metrics are stored in the 'results' directory"

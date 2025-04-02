@@ -11,7 +11,7 @@ def main():
     if len(sys.argv) == 2:
         experiment_folder = sys.argv[1]
     else:
-        print('Usage: python3 analyse-results.py results_folder_name')
+        print('Usage: python3 analyse-results.py results_folder_name where results_folder_name is the folder that contains all JSON files')
         sys.exit(0)
 
     # load all data

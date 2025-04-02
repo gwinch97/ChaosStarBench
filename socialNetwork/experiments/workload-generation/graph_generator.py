@@ -1,6 +1,6 @@
 """This file creates a time-series graph for the number of instances against the number of requests"""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from kubernetes import client, config
 from kubernetes.client import ApiException
 import matplotlib.pyplot as plt
@@ -67,6 +67,7 @@ def get_replicas(namespace):
 def main():
     requests = 0
 
+    # TODO: make it use jaeger traces instead
     for i in range(0, WORKLOAD_LENGTH_SECONDS): # run for WORKLOAD_LENGTH_SECONDS seconds
         get_replicas('socialnetwork')
 

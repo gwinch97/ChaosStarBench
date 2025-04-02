@@ -29,7 +29,7 @@ STEP = "10s" # get prom data every 10s interval
 INDEX_PATTERN = "jaeger-span-*"
 
 # IMPORTANT FILES
-DIRECTORY = f'.results/{datetime.now()}'
+DIRECTORY = f'{datetime.now()}'
 os.makedirs(DIRECTORY, exist_ok=True) # create the directory
 JAEGER_FILE = f'{DIRECTORY}/jaeger_traces.json'
 PROM_CPU_UTILISATION_FILE = f'{DIRECTORY}/prometheus_cpu_utilisation.json'

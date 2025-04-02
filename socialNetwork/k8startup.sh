@@ -64,8 +64,8 @@ cd socialNetwork
 
 
 echo "----- CHECKING FOR MINIKUBE CHAOSD INSTALL -----"
-minikube cp ./install_chaosd.sh /home/docker/
-minikube ssh -- "bash ./install_chaosd.sh"
+minikube cp ./k8install_chaosd.sh /home/docker/
+minikube ssh -- "bash ./k8install_chaosd.sh"
 # to install on user's machine, run 'bash ./install_chaosd.sh'
 
 echo "----- WAITING FOR JAEGER DEPLOYMENT -----"
