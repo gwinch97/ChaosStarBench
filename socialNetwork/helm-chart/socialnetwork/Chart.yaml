@@ -14,7 +14,7 @@ dependencies:
   - name: home-timeline-service
     version: 0.1.0
   - name: jaeger
-    version: "3.4.0"
+    version: 3.4.1
     repository: "https://jaegertracing.github.io/helm-charts"
   - name: media-service
     version: 0.1.0
@@ -75,7 +75,7 @@ dependencies:
   - name: user-timeline-service
     version: 0.1.0
   - name: mongodb-sharded
-    version: 9.1.0
+    version: 9.2.2
     condition: global.mongodb.sharding.enabled
     repository: https://charts.bitnami.com/bitnami
   - name: mcrouter
@@ -83,10 +83,10 @@ dependencies:
     condition: global.memcached.cluster.enabled
     repository: https://evryfs.github.io/helm-charts/
   - name: redis-cluster
-    version: 11.2.1
+    version: 11.4.6
     condition: global.redis.cluster.enabled
     repository: https://charts.bitnami.com/bitnami
   - name: redis
-    version: 20.6.1
+    version: 20.11.4
     condition: global.redis.replication.enabled
     repository: https://charts.bitnami.com/bitnami

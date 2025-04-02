@@ -10,7 +10,7 @@ dependencies:
   version: 0.1.0
 - name: jaeger
   repository: https://jaegertracing.github.io/helm-charts
-  version: 3.4.0
+  version: 3.4.1
 - name: media-service
   repository: ""
   version: 0.1.0
@@ -82,15 +82,15 @@ dependencies:
   version: 0.1.0
 - name: mongodb-sharded
   repository: https://charts.bitnami.com/bitnami
-  version: 9.1.0
+  version: 9.2.2
 - name: mcrouter
   repository: https://evryfs.github.io/helm-charts/
   version: 0.4.0
 - name: redis-cluster
   repository: https://charts.bitnami.com/bitnami
-  version: 11.2.1
+  version: 11.4.6
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 20.6.1
-digest: sha256:0b30daef9e7e87bbf17aa69c4b192791c1e54875b630ed6e63af0dcfd9ef58c5
-generated: "2025-01-28T12:26:29.197753038Z"
+  version: 20.11.4
+digest: sha256:505209ff097970f1a4d247a9cc80d0c29400ed204154f7a36b8d46ef28f42139
+generated: "2025-04-02T11:58:58.607180304+01:00"
