@@ -72,7 +72,7 @@ echo "----- RUN WORKLOAD AFTER FAULT -----"
 
 echo "----- SCRAPING METRICS -----"
 cd experiments/results/
-python3 scrape_all_data.py
+python3 scrape_all_data.py $duration
 
 echo "----- EXPERIMENT COMPLETE -----"
 echo "Experiment results and metrics are stored in the 'results' directory"

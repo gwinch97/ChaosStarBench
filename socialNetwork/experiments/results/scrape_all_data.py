@@ -11,7 +11,7 @@ from elasticsearch import Elasticsearch, helpers
 from tqdm import tqdm
 
 if len(sys.argv) == 2:
-    duration = sys.argv[1]
+    duration = int(sys.argv[1])
 else:
     print('Usage: python3 scrape_all_data.py <duration>')
     sys.exit(0)
@@ -182,7 +182,7 @@ def main():
         scroll = '2m'
         batch_size = 1000
 
-        epoch_start_time = int(time.time() - duration) * 1000
+        epoch_start_time = START_TIME * 1000
 
         query = {
             "query": {
