@@ -47,6 +47,9 @@ def main():
         "text-service": {}
     }
 
+    # edit this variable to get information about a different service
+    chosen_service = 'compose-post-service'
+
     cpu_utilisation = services.copy()
     cpu_throttling = services.copy()
     instance_count = services.copy()
@@ -109,7 +112,7 @@ def main():
 
     cpu_utilisation = new_data
     for service_name, values_dict in cpu_utilisation.items():
-        if service_name == 'compose-post-service':
+        if service_name == chosen_service:
             # sort dict based on timestamp
             ordered_data = dict(sorted(values_dict.items()))
 
@@ -145,7 +148,7 @@ def main():
         cpu_throttling[service_name] = values_dict
 
     for service_name, values_dict in cpu_throttling.items():
-        if service_name == 'compose-post-service':
+        if service_name == chosen_service:
             # sort dict based on timestamp
             ordered_data = dict(sorted(values_dict.items()))
 
@@ -182,7 +185,7 @@ def main():
         instance_count[service_name] = values_dict
         
     for servicename, time_data in instance_count.items():        
-        if servicename=='compose-post-service':
+        if servicename==chosen_service:
             # sort dict based on timestamp
             ordered_data = dict(sorted(values_dict.items()))
 
@@ -242,7 +245,7 @@ def main():
 
     
     for service_name, values_dict in mem_utilisation.items():
-        if service_name == 'compose-post-service':
+        if service_name == chosen_service:
             # sort dict based on timestamp
             ordered_data = dict(sorted(values_dict.items()))
 
