@@ -4,7 +4,7 @@ import sys
 
 
 def get_name(name):
-        return "-".join(name.split("-")[:-2])
+    return "-".join(name.split("-")[:-2])
 
 
 def main():
@@ -168,30 +168,31 @@ def main():
     for result in instance_count_data:
         values = result['values']
         service_name = get_name(result['metric']['pod'])
-        values_dict = {}
 
-        if service_name in instance_count.keys():
-            values_dict = instance_count[service_name]
+        # Get or create a new dict for the service
+        if service_name not in instance_count:
+            instance_count[service_name] = {}
+        
+        values_dict = instance_count[service_name]
 
         for value in values:
             timestamp = int(value[0] - start_time)
             instances = float(value[1])
 
-            if timestamp in values_dict.keys():
+            if timestamp in values_dict:
                 values_dict[timestamp] += instances
             else:
                 values_dict[timestamp] = instances
-        
-        instance_count[service_name] = values_dict
-        
-    for servicename, time_data in instance_count.items():        
-        if servicename==chosen_service:
+
+    # Plotting only the chosen service
+    for servicename, time_data in instance_count.items():
+        if servicename == chosen_service:
             # sort dict based on timestamp
-            ordered_data = dict(sorted(values_dict.items()))
+            ordered_data = dict(sorted(time_data.items()))
 
             times = list(ordered_data.keys())
             values = list(ordered_data.values())
-            
+
             ax[2].plot(times, values)
             ax[2].axvline(chaos_injection_time, color='r', linestyle='--')
             ax[2].set_ylabel('Instance Count')
