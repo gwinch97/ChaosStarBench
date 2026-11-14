@@ -47,8 +47,8 @@ Default `DATA_DIR=~/projects/hotel-data`.
      is > 0 and pods have a `pod` label;
    - a manual `kubectl apply -f chaos/cpuhog/search.yaml` shows in `kubectl get stresschaos -n hotelreservation`
      and the search pod's CPU rises in Prometheus; then `kubectl delete -f` it.
-5. **Short real run:** `PRE_FAULT_S=900 FAULT_S=600 SCRAPE_WINDOW_S=1200 bash run_one.sh cpuhog search 99`
-   (≈ 30 min). Check `cpu_usage.csv` (one column per pod, no consul/jaeger), `fault_inject.txt` ≈ 180,
+5. **Short real run:** `PRE_FAULT_S=900 FAULT_S=600 SCRAPE_WINDOW_S=1200 bash run_one.sh cpuhog search 99 0` (rep 99, workload folder 0)
+   (≈ 30 min). Check `cpu_usage.csv` (one column per pod, no consul/jaeger), `fault_inject.txt` = 120 (fault 600 s before the end of a 1200 s window; full runs give 720),
    and that `search-hotelres` CPU jumps after that index. Delete the `_99` folder afterwards.
 6. **Collection:** in tmux/screen: `bash run_all.sh 2`. Round 1 (16 datasets, ≈ 42 h) gives a complete
    balanced set; round 2 doubles it. Watch `$DATA_DIR/*/run.log` and `failures.log`.
