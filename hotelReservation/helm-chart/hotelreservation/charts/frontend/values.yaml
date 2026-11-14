@@ -5,7 +5,7 @@ ports:
     targetPort: 5000
 
 container:
-  command: ./frontend
+  command: frontend
   image: deathstarbench/hotel-reservation
   name: hotel-reserv-frontend
   ports:

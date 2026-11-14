@@ -5,7 +5,7 @@ ports:
     targetPort: 8083
  
 container:
-  command: ./geo
+  command: geo
   image: deathstarbench/hotel-reservation
   name: hotel-reserv-geo
   ports:

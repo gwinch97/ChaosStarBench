@@ -43,6 +43,6 @@ kill "${PIDS[@]}" 2>/dev/null || true
 
 python3 scrape_cpu.py "${SCRAPE_WINDOW_S}s" "$OUT" --namespace "$NAMESPACE" --prom "http://localhost:$PROM_PORT"
 python3 make_dataset.py "$OUT" --duration "$SCRAPE_WINDOW_S" --step "$STEP_S"
-kubectl get pods -A -o json | jq -r '["name","namespace","node"], (.items[] | [.metadata.name, .metadata.namespace, .spec.nodeName]) | @csv' > "$OUT/deployment.csv"
+kubectl get pods -A -o json | python3 -c 'import csv,json,sys; w=csv.writer(sys.stdout,quoting=csv.QUOTE_ALL,lineterminator="\n"); w.writerow(["name","namespace","node"]); [w.writerow([p["metadata"]["name"],p["metadata"]["namespace"],p["spec"].get("nodeName","")]) for p in json.load(sys.stdin)["items"]]' > "$OUT/deployment.csv"
 cp "$CHAOS" "$VALUES" "$OUT/"
 echo "== done $NAME $(date "+%Y-%m-%dT%H:%M:%S%z"), fault_inject=$(cat "$OUT/fault_inject.txt")"

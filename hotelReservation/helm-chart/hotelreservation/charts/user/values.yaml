@@ -5,7 +5,7 @@ ports:
     targetPort: 8086
  
 container:
-  command: ./user
+  command: user
   image: deathstarbench/hotel-reservation
   name: hotel-reserv-user
   ports:

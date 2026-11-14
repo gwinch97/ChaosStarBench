@@ -14,6 +14,9 @@ if [ "$(minikube status --format='{{.Host}}' 2>/dev/null || true)" != "Running" 
     --cpus="$NODE_CPUS" --memory="$NODE_MEM_MB" --nodes="$N_NODES" \
     --extra-config=kubelet.housekeeping-interval=1s --extra-config=kubelet.fail-swap-on=false
 fi
+# 5 kind nodes share one kernel; the default inotify limit (128) makes chaos-controller-manager
+# crash with "too many open files" (seen on WSL2). Kernel-wide, so one node is enough.
+minikube ssh -- "sudo sysctl -w fs.inotify.max_user_instances=8192"
 kubectl taint node minikube node-role.kubernetes.io/control-plane=:NoSchedule --overwrite || true
 
 echo "----- STORAGE (as socialNetwork/k8startup.sh) -----"

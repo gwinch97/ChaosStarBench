@@ -5,7 +5,7 @@ ports:
     targetPort: 8085
  
 container:
-  command: ./recommendation
+  command: recommendation
   image: deathstarbench/hotel-reservation
   name: hotel-reserv-recommendation
   ports:
