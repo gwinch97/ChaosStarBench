@@ -1,0 +1,7 @@
+#!/bin/bash
+echo "[fake kubectl] $*" >> "$FAKE_LOG"
+if [ "$1" = apply ] || [ "$1" = delete ]; then for a in "$@"; do [ -f "$a" ] && echo "[fake kubectl] manifest $a: $(grep -m1 '^kind' "$a") app=$(grep -m1 'app:' "$a" | awk '{print $2}')" >> "$FAKE_LOG"; done; fi
+if [ "$1" = create ] && [[ " $* " == *" --dry-run=client "* ]]; then echo "apiVersion: v1"; echo "kind: Namespace"; fi
+if [ "$1" = get ] && [[ " $* " == *" -o json "* ]]; then echo '{"items":[{"metadata":{"name":"search-hotelres-x","namespace":"hotelreservation"},"spec":{"nodeName":"minikube-m02"}}]}'; fi
+if [ "$1" = port-forward ]; then sleep 3600; fi
+exit 0

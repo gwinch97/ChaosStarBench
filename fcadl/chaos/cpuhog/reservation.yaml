@@ -1,0 +1,17 @@
+kind: StressChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: hotelreservation
+  name: reservation-cpuhog
+spec:
+  selector:
+    namespaces:
+      - hotelreservation
+    labelSelectors:
+      app: reservation-hotelres
+  mode: one
+  stressors:
+    cpu:
+      workers: 2
+      load: 100
+  duration: '3600s'

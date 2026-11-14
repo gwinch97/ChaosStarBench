@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "[fake helm] $*" >> "$FAKE_LOG"
+exit 0

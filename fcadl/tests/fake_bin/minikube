@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "[fake minikube] $*" >> "$FAKE_LOG"
+case "$1" in status) echo "Stopped";; node) echo "minikube 192.168.49.2";; esac
+exit 0

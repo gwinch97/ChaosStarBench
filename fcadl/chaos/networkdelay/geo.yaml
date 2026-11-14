@@ -1,0 +1,18 @@
+kind: NetworkChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: hotelreservation
+  name: geo-delay
+spec:
+  action: delay
+  mode: one
+  selector:
+    namespaces:
+      - hotelreservation
+    labelSelectors:
+      app: geo-hotelres
+  delay:
+    latency: '50ms'
+    correlation: '100'
+    jitter: '50ms'
+  duration: '3600s'

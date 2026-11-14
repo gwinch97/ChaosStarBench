@@ -1,0 +1,52 @@
+# Resource settings for the FC-ADL runs (as the Social Network Helm values: requests set,
+# CPU limit off). values-memlimit.yaml adds a 512Mi memory limit for the memhog condition;
+# memhog_nn (noisy neighbour) uses values-fcadl.yaml, i.e. no memory limit.
+
+frontend:
+  container:
+    resources: |
+      requests:
+        cpu: 50m
+        memory: 128Mi
+geo:
+  container:
+    resources: |
+      requests:
+        cpu: 50m
+        memory: 128Mi
+profile:
+  container:
+    resources: |
+      requests:
+        cpu: 50m
+        memory: 128Mi
+rate:
+  container:
+    resources: |
+      requests:
+        cpu: 50m
+        memory: 128Mi
+recommendation:
+  container:
+    resources: |
+      requests:
+        cpu: 50m
+        memory: 128Mi
+reservation:
+  container:
+    resources: |
+      requests:
+        cpu: 50m
+        memory: 128Mi
+search:
+  container:
+    resources: |
+      requests:
+        cpu: 50m
+        memory: 128Mi
+user:
+  container:
+    resources: |
+      requests:
+        cpu: 50m
+        memory: 128Mi

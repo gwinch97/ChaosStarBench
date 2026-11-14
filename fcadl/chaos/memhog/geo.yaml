@@ -1,0 +1,17 @@
+kind: StressChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: hotelreservation
+  name: geo-memhog
+spec:
+  selector:
+    namespaces:
+      - hotelreservation
+    labelSelectors:
+      app: geo-hotelres
+  mode: one
+  stressors:
+    memory:
+      workers: 1
+      size: '95%'
+  duration: '3600s'
