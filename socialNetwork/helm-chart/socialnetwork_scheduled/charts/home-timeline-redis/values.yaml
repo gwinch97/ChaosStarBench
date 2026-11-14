@@ -1,0 +1,34 @@
+name: home-timeline-redis
+
+ports:
+  - port: 6379
+    targetPort: 6379
+
+container:
+  args: 
+  - /social-network-microservices/config/redis.conf
+  image: library/redis
+  imageVersion: 7.4.2
+  name: home-timeline-redis
+  ports: 
+  - containerPort: 6379
+  resources:
+    limits:
+      cpu: "1000m"
+
+configMaps:
+  - name: redis.conf
+    mountPath: /social-network-microservices/config/redis.conf
+    value: redis
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - minikube-m03
+          - minikube-m04
+          - minikube-m05

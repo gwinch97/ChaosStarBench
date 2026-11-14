@@ -387,22 +387,26 @@ server:
   #     operator: "Equal"
   #     value: "monitoring"
   #     effect: "NoSchedule"
-
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+      
   ## Node labels for Prometheus server pod assignment
   ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
   ##
   nodeSelector: {}
 
-  ## Pod affinity
-  #affinity:
-  # nodeAffinity:
-  #   requiredDuringSchedulingIgnoredDuringExecution:
-  #     nodeSelectorTerms:
-  #     - matchExpressions:
-  #       - key: "kubernetes.io/hostname"
-  #         operator: "In"
-  #         values:
-  #         - "minikube-m02"
+  # Pod affinity
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"
 
   ## Pod topology spread constraints
   ## ref. https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
@@ -1232,6 +1236,10 @@ kube-state-metrics:
   ## If false, kube-state-metrics sub-chart will not be installed
   ##
   enabled: true
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
 
 ## prometheus-node-exporter sub-chart configurable values
 ## Please see https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter

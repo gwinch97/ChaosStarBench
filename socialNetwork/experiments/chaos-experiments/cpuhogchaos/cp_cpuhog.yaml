@@ -1,0 +1,17 @@
+kind: StressChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: socialnetwork
+  name: cp-cpuhog
+spec:
+  selector:
+    namespaces:
+      - socialnetwork
+    labelSelectors:
+      app: compose-post-service
+  mode: all
+  stressors:
+    cpu:
+      workers: 2
+      load: 100
+  duration: 60s

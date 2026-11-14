@@ -1,0 +1,17 @@
+kind: StressChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: socialnetwork
+  name: uts-cpuhog
+spec:
+  selector:
+    namespaces:
+      - socialnetwork
+    labelSelectors:
+      app: user-timeline-service
+  mode: one
+  stressors:
+    cpu:
+      workers: 2
+      load: 100
+  duration: 3600s

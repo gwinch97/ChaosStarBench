@@ -1,0 +1,109 @@
+global: 
+  replicas: 1
+  imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+  serviceType: ClusterIP
+  dockerRegistry: docker.io
+  defaultImageVersion: latest
+  redis:
+    cluster:
+      enabled: false
+    standalone:
+      enabled: true
+    replication:
+      primary: redis-master
+      replica: redis-replicas
+      enabled: false
+  memcached:
+    cluster:
+      enabled: false
+      port: &memcached-cluster-port 5000
+    standalone:
+      enabled: true
+  mongodb:
+    standalone:
+      enabled: true
+    sharding:
+      enabled: false
+      svc:
+        name: "mongodb-sharded"
+        user: "root"
+        password: &mongodb-sharded-password "password"
+        port: 27017
+  nginx:
+    resolverName: kube-dns.kube-system.svc.cluster.local
+
+
+mongodb-sharded:
+  fullnameOverride: mongodb-sharded
+  auth:
+    rootPassword: *mongodb-sharded-password
+  shards: 3
+  shardsvr:
+    dataNode:
+      replicaCount: 3
+
+mcrouter:
+  controller: statefulset
+  memcached:
+    replicaCount: 3
+  mcrouterCommandParams.port: *memcached-cluster-port
+
+redis-cluster:
+  usePassword: false
+  redis:
+    # default readiness / liveness probes are causing issues, rising timeouts/delays might help
+    # cluster health check will be handled by post-commit hook
+    readinessProbe:
+      enabled: false
+    livenessProbe:
+      enabled: false
+
+redis:
+  fullnameOverride: "redis"
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: false
+  replica:
+    persistence:
+      enabled: false
+    replicaCount: 6
+
+jaeger:
+  enabled: true
+  fullnameOverride: "jaeger"
+
+  agent:
+    enabled: true
+    strategy: DaemonSet  # Use "DaemonSet" or "Sidecar"
+    # Additional agent configurations if needed
+
+  collector:
+    enabled: true
+    replicas: 1
+    # Additional collector configurations if needed
+
+  query:
+    enabled: true
+    # Expose the Jaeger UI if desired
+    service:
+      type: ClusterIP
+    ingress:
+      enabled: false  # Set to true if you want to use Ingress
+      # Additional ingress configurations if needed
+  
+  provisionDataStore:
+    cassandra: false
+    elasticsearch: true
+  
+
+  storage:
+    type: elasticsearch
+    elasticsearch:
+      host: "socialnetwork-elasticsearch"
+      port: 9200
+    
+    cassandra:
+      enabled: false

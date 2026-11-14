@@ -1,0 +1,17 @@
+kind: StressChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: socialnetwork
+  name: cp-memleak
+spec:
+  selector:
+    namespaces:
+      - socialnetwork
+    labelSelectors:
+      app: compose-post-service
+  mode: all
+  stressors:
+    memory:
+      workers: 4
+      size: "95%"
+  duration: 7200s

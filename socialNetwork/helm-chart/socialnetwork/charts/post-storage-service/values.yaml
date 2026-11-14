@@ -15,7 +15,7 @@ container:
     requests:
       cpu: "100m"
     limits:
-      cpu: "350m"
+      #cpu: "350m"
 
 configMaps:
   - name: service-config.json
@@ -29,8 +29,8 @@ configMaps:
 jaeger:
   agentHost: "jaeger-agent"
   agentPort: 6831
-  samplerType: "const"
-  samplerParam: 1
+  samplerType: "probabilistic"
+  samplerParam: 0.1
   logSpans: true
   queueSize: 100
   bufferFlushInterval: 10

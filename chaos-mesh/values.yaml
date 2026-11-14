@@ -71,7 +71,7 @@ controllerManager:
   # Custom priorityClassName for using pod priorities
   priorityClassName: ""
   # Replicas for chaos-controller-manager
-  replicaCount: 3
+  replicaCount: 1
   # image would be constructed by <registry>/<repository>:<tag>
   image:
     # override global registry, empty value means using the global images.registry
@@ -117,9 +117,20 @@ controllerManager:
   # Node labels for chaos-controller-manager pod assignment
   nodeSelector: {}
   # Toleration labels for chaos-controller-manager pod assignment
-  tolerations: []
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
   # Map of chaos-controller-manager node/pod affinities
-  affinity: {}
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"
   # Pod annotations of chaos-controller-manager
   podAnnotations: {}
   # A list of controllers to enable. "*" enables all controllers by default.
@@ -239,9 +250,20 @@ chaosDaemon:
   # Node labels for chaos-daemon pod assignment
   nodeSelector: {}
   # Toleration labels for chaos-daemon pod assignment
-  tolerations: []
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
   # Map of chaos-controller-manager node/pod affinities
-  affinity: {}
+  #affinity:
+  # nodeAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     nodeSelectorTerms:
+  #     - matchExpressions:
+  #       - key: "kubernetes.io/hostname"
+  #         operator: "In"
+  #         values:
+  #         - "minikube"
 
   # Specify DaemonSetUpdateStrategy for chaos-daemon
   updateStrategy:
@@ -296,9 +318,20 @@ dashboard:
   # Node labels for chaos-dashboard  pod assignment
   nodeSelector: {}
   # Toleration labels for chaos-dashboard pod assignment
-  tolerations: []
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
   # Map of chaos-dashboard node/pod affinities
-  affinity: {}
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"
   # Deployment chaos-dashboard annotations
   podAnnotations: {}
   # list of extra sidecar containers
@@ -448,7 +481,10 @@ dnsServer:
   # Node labels for chaos-dns-server pod assignment
   nodeSelector: {}
   # Toleration labels for chaos-dns-server pod assignment
-  tolerations: []
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
   # Pod annotations of chaos-dns-server
   podAnnotations: {}
   # the service name of chaos-dns-server
@@ -504,9 +540,20 @@ prometheus:
   # Node labels for prometheus pod assignment
   nodeSelector: {}
   # Toleration labels for prometheus pod assignment
-  tolerations: []
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
   # Map of prometheus node/pod affinities
-  affinity: {}
+  affinity:
+   nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+       nodeSelectorTerms:
+       - matchExpressions:
+         - key: "kubernetes.io/hostname"
+           operator: "In"
+           values:
+           - "minikube"
   # Deployment prometheus annotations
   podAnnotations: {}
   #  CPU/Memory resource requests/limits for prometheus pod

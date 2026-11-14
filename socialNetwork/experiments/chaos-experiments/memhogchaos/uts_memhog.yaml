@@ -1,0 +1,17 @@
+kind: StressChaos
+apiVersion: chaos-mesh.org/v1alpha1
+metadata:
+  namespace: socialnetwork
+  name: uts-memleak
+spec:
+  selector:
+    namespaces:
+      - socialnetwork
+    labelSelectors:
+      app: user-timeline-service
+  mode: one
+  stressors:
+    memory:
+      workers: 4
+      size: "95%"
+  duration: 3600s

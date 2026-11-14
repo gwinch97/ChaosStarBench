@@ -1,0 +1,87 @@
+name: compose-post-service
+
+ports:
+  - port: 9090
+    targetPort: 9090
+
+container:
+  command: ComposePostService
+  image: lewisrye/social-network-microservices
+  imageVersion: xenial
+  name: compose-post-service
+  ports: 
+  - containerPort: 9090
+  resources:
+    requests:
+      cpu: "100m"
+    limits:
+      cpu: "500m"
+
+jaeger:
+  agentHost: "jaeger-agent"
+  agentPort: 6831
+  samplerType: "const"
+  samplerParam: 1
+  logSpans: true
+  queueSize: 100
+  bufferFlushInterval: 10
+  disabled: false
+
+configMaps:
+  - name: service-config.json
+    mountPath: /social-network-microservices/config/service-config.json
+    value: service-config
+
+  - name: jaeger-config.yml
+    mountPath: /social-network-microservices/config/jaeger-config.yml
+    value: jaeger-config
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - home-timeline-service
+          - home-timeline-redis
+          - user-timeline-service
+          - user-timeline-mongodb
+          - user-timeline-redis
+          - post-storage-service
+          - post-storage-mongodb
+          - post-storage-memcached
+      topologyKey: kubernetes.io/hostname
+    - labelSelector:
+        matchLabels:
+          app: home-timeline-service
+      topologyKey: kubernetes.io/hostname
+    - labelSelector:
+        matchLabels:
+          app: home-timeline-redis
+      topologyKey: kubernetes.io/hostname
+    - labelSelector:
+        matchLabels:
+          app: user-timeline-service
+      topologyKey: kubernetes.io/hostname
+    - labelSelector:
+        matchLabels:
+          app: user-timeline-mongodb
+      topologyKey: kubernetes.io/hostname
+    - labelSelector:
+        matchLabels:
+          app: user-timeline-redis
+      topologyKey: kubernetes.io/hostname
+    - labelSelector:
+        matchLabels:
+          app: post-storage-service
+      topologyKey: kubernetes.io/hostname
+    - labelSelector:
+        matchLabels:
+          app: post-storage-memcached
+      topologyKey: kubernetes.io/hostname
+    - labelSelector:
+        matchLabels:
+          app: post-storage-mongodb
+      topologyKey: kubernetes.io/hostname

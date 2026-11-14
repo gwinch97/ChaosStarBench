@@ -5,6 +5,23 @@ mem=$2
 n_nodes=$3
 n_inst=$4
 
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [cpus mem n_nodes n_inst]
+
+Options:
+  -cpus     Number of cpu cores per node
+  -mem      Amount of memory to allocate per node
+  -n_nodes  Number of virtual nodes in total
+  -n_inst   Number of instances to start the deployment with
+EOF
+  exit 1
+}
+
+if [[ $# -eq 0 ]]; then
+	usage
+fi
+
 if [ "$n_nodes" -lt 2 ]; then
 	echo "ERROR: running socialnetwork with less than 2 nodes causes instability"
 	exit 0
@@ -18,10 +35,20 @@ status=$(minikube status --format='{{.Host}}')
 if [ "$status" == "Running" ]; then
 	echo "Minikube is already running"
 else
-	minikube start --cpus=${cpus} --memory=${mem} --extra-config=kubelet.housekeeping-interval=1s --extra-config=kubelet.fail-swap-on=false --nodes ${n_nodes}
+	minikube start \
+		--kubernetes-version=v1.28.6 \
+		--driver=docker \
+		--cpus="${cpus}" \
+		--memory="${mem}" \
+		--extra-config=kubelet.housekeeping-interval=1s \
+		--extra-config=kubelet.fail-swap-on=false \
+		--nodes="${n_nodes}"
+		# Increase open-file descriptors limit for chaos-mesh
 fi
 
-# kubectl taint nodes minikube key=monitoring:NoSchedule
+echo "----- TAINT CONTROL-PLANE NODE -----"
+kubectl taint node minikube node-role.kubernetes.io/control-plane=:NoSchedule --overwrite || true
+
 # Fix for persistant volumes permission issue for >1 node clusters (issue#12360)
 echo "----- FIX PERMISSION ISSUE -----"
 minikube addons disable storage-provisioner
@@ -29,8 +56,55 @@ minikube addons disable default-storageclass
 minikube addons enable volumesnapshots
 minikube addons enable csi-hostpath-driver
 
-echo "----- PATCH STORAGECLASS -----"
-kubectl patch storageclass csi-hostpath-sc -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+# Recreate the CSI HostPath StorageClass so we can set volumeBindingMode
+echo "----- RECREATE CSI HOSTPATH STORAGECLASS -----"
+# 1) Remove the old class (ignore errors)
+kubectl delete storageclass csi-hostpath-sc || true
+
+# 2) Recreate it with WaitForFirstConsumer + default marker
+cat <<EOF | kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: csi-hostpath-sc
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: hostpath.csi.k8s.io
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+EOF
+
+# Create host directory in minikube
+echo "----- CREATE LOCAL DIRECTORY ON MINIKUBE (/data/prometheus) -----"
+minikube ssh -- "sudo mkdir -p /data/prometheus && sudo chown docker:docker /data/prometheus"
+
+# emit local PV manifest and apply
+echo "----- CREATE A LOCAL-PV FOR PROMETHEUS ON minikube -----"
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-minikube-local-pv
+spec:
+  capacity:
+    storage: 24Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: csi-hostpath-sc
+  volumeMode: Filesystem
+  local:
+    path: /data/prometheus
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube
+EOF
 
 # Create kubectl namespaces and install helm charts to them
 echo "----- CREATE KUBECTL NAMESPACES -----"
@@ -50,6 +124,10 @@ if kubectl get namespace "prometheus" > /dev/null 2>&1; then
 else
 	kubectl create namespace prometheus
 	kubectl config set-context --current --namespace=prometheus
+	helm install prometheus ./prometheus
+fi
+
+if kubectl get namespace "chaos-mesh" > /dev/null 2>&1; then
 	helm install prometheus ./prometheus
 fi
 
@@ -105,7 +183,3 @@ echo "----- DEPLOY METRICS SERVER -----"
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
 # Allow metrics server to run without TLS
-echo "----- PATCH METRICS SERVER -----"
-kubectl patch deploy metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls=true"}]'
-
-kubectl config set-context --current --namespace=socialnetwork

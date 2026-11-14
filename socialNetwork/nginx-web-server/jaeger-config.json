@@ -9,6 +9,6 @@
   },
   "sampler": {
     "type": "probabilistic",
-    "param": 0.2
+    "param": 0.1
   }
 }

@@ -1,0 +1,28 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: cp-memleak-2
+  namespace: socialnetwork
+spec:
+  mode: one
+  selector:
+    namespaces: 
+      - socialnetwork
+    labelSelectors:
+      app: compose-post-service
+
+  # point at the right container if you have a sidecar
+  containerNames:
+    - compose-post-service
+
+  # must be a string
+  duration: "3600s"
+
+  # no `stressors:` block here—this is a raw stress-ng CLI invocation
+  stressngStressors: >-
+    --vm 1
+    --vm-bytes 600M
+    --vm-keep
+    --timeout 3600s
+    --verbose
+

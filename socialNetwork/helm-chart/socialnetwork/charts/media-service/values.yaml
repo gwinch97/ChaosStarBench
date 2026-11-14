@@ -15,13 +15,13 @@ container:
     requests:
       cpu: "50m"
     limits:
-      cpu: "100m"
+      #cpu: "100m"
 
 jaeger:
   agentHost: "jaeger-agent"
   agentPort: 6831
-  samplerType: "const"
-  samplerParam: 1
+  samplerType: "probabilistic"
+  samplerParam: 0.1
   logSpans: true
   queueSize: 100
   bufferFlushInterval: 10

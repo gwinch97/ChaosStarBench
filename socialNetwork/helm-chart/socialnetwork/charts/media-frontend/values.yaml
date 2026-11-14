@@ -58,16 +58,15 @@ affinity:
 
 # tolerations     
 tolerations:
-- key: "monitoring"
-  operator: "Equal"
-  value: "enabled"
-  effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
 
 jaeger:
   agentHost: "jaeger-agent"
   agentPort: 6831
-  samplerType: "const"
-  samplerParam: 1
+  samplerType: "probabilistic"
+  samplerParam: 0.1
   logSpans: true
   queueSize: 100
   bufferFlushInterval: 10
