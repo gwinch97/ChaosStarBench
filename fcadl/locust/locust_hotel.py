@@ -30,7 +30,10 @@ def _coords():
 
 def _user():
     uid = random.randint(0, 500)
-    return f"Cornell_{uid}", str(uid) * 10
+    # The user service seeds names with Sprintf("Cornell_%x", strconv.Itoa(i)), i.e. the hex of
+    # the decimal string (1 -> Cornell_31). The wrk2 script's "Cornell_<i>" never logs in, so
+    # every reservation would be rejected before reaching the reservation service.
+    return f"Cornell_{str(uid).encode().hex()}", str(uid) * 10
 
 
 class HotelUser(HttpUser):
