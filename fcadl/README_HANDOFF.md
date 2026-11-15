@@ -14,7 +14,7 @@ Everything here was written and checked on a Mac without a cluster (see "What ha
 |---|---|
 | `config.sh` | All settings (namespace, fault services, timings, cluster size, output dir). Every value can be overridden from the environment. |
 | `k8startup_hotel.sh [values file]` | Fresh minikube cluster (as `socialNetwork/k8startup.sh`: 5 nodes × 2 CPU × 8 GB, kubelet housekeeping 1 s, CSI hostpath, Prometheus local PV), hotelReservation via Helm, Prometheus, Chaos Mesh, chaosd on the nodes, port-forwards (frontend :5000, Prometheus :9090), health checks. |
-| `values-fcadl.yaml`, `values-memlimit.yaml` | Helm overlays: CPU 50m / memory 128Mi requests on the 8 application services, no limits; `values-memlimit` adds a 512Mi memory limit (used for the `memhog` fault only; `memhog_nn` = noisy neighbour, no limit). |
+| `values-fcadl.yaml`, `values-memlimit.yaml` | Helm overlays: CPU 50m / memory 128Mi requests on the 8 application services and a per-service CPU limit (about 1.5x the normal peak, as in the Social Network chart at commit 4c82243 that produced the published data; table in the file); databases/memcached unlimited; `values-memlimit` adds a 512Mi memory limit (used for the `memhog` fault only; `memhog_nn` = noisy neighbour, no limit). |
 | `chaos/<fault>/<service>.yaml`, `chaos/gen_chaos.py` | Chaos Mesh manifests: `cpuhog` (StressChaos, 2 workers, 100%), `memhog` and `memhog_nn` (StressChaos memory, 1 worker, 95%), `networkdelay` (NetworkChaos 50 ms ± 50 ms); one pod, 3600 s. Parameters follow the Social Network runs. |
 | `locust/locust_hotel.py` | Time-varying load: `HOTEL_REQUEST=search|recommend|reserve`, users per second from `HOTEL_CSV`. Requests copy `hotelReservation/wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua`. |
 | `run_one.sh <fault> <service> <rep> [workload]` | One dataset: fresh cluster → 3 Locust streams (search ← `sin/<rep>/cp_workload.csv`, recommend ← `hts`, reserve ← `uts`) → 90 min → apply fault, record `fault_time.txt` → 60 min → remove fault → scrape last 2 h → `make_dataset.py`. ≈ 2.6 h. |
@@ -58,9 +58,13 @@ Default `DATA_DIR=~/projects/hotel-data`.
 1. Fault services: search, recommendation, reservation, user (one per request type).
 2. Load: the three Social Network sinusoidal workload CSVs, mapped search ← cp, recommend ← hts,
    reserve ← uts (reserve stream is 50% login, 50% reservation).
-3. Memory limits: 512Mi for `memhog`, none for `memhog_nn`; the limits the Social Network `memhog`
+3. CPU limits (decided with Giles, 15 Nov 2026): per-service, about 1.5x normal peak, following the
+   Social Network data (compose-post capped at 500m, home-timeline at 100m). An earlier version had no
+   CPU limits (copied from the edited WSL working copy), so a CPU hog reached 2 cores; those 3 cpuhog
+   datasets are kept in `~/projects/hotel-data-nolimit`.
+4. Memory limits: 512Mi for `memhog`, none for `memhog_nn`; the limits the Social Network `memhog`
    (non-NN) runs used are not recorded anywhere.
-4. Traces (Jaeger) are not collected; FC-ADL only needs CPU.
+5. Traces (Jaeger) are not collected; FC-ADL only needs CPU.
 
 ## Known gaps
 

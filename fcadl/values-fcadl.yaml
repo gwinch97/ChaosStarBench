@@ -1,5 +1,20 @@
-# Resource settings for the FC-ADL runs (as the Social Network Helm values: requests set,
-# CPU limit off). values-memlimit.yaml adds a 512Mi memory limit for the memhog condition;
+# Resource settings for the FC-ADL runs, following the Social Network setup that produced the
+# published datasets (socialNetwork Helm values at commit 4c82243): CPU requests on the services,
+# a per-service CPU limit, no limits on databases/memcached. The Social Network limits sit about
+# 1.5-4x above each service's normal peak (e.g. home-timeline 100m vs ~0.065 cores, compose-post
+# 500m vs 0.13-0.34), so a CPU hog is capped there. Hotel limits use the same rule: about 1.5x the
+# normal peak measured in the first hotel runs (fault-free samples, 5 s), rounded to Social
+# Network-style values:
+#   service         normal peak (cores)   limit
+#   frontend        0.385                 1000m
+#   geo             0.074                 150m
+#   profile         0.148                 350m
+#   rate            0.277                 500m
+#   recommendation  0.057                 100m
+#   reservation     0.959                 1500m
+#   search          0.204                 350m
+#   user            0.060                 100m
+# values-memlimit.yaml additionally sets a 512Mi memory limit (memhog condition);
 # memhog_nn (noisy neighbour) uses values-fcadl.yaml, i.e. no memory limit.
 
 frontend:
@@ -8,45 +23,61 @@ frontend:
       requests:
         cpu: 50m
         memory: 128Mi
+      limits:
+        cpu: 1000m
 geo:
   container:
     resources: |
       requests:
         cpu: 50m
         memory: 128Mi
+      limits:
+        cpu: 150m
 profile:
   container:
     resources: |
       requests:
         cpu: 50m
         memory: 128Mi
+      limits:
+        cpu: 350m
 rate:
   container:
     resources: |
       requests:
         cpu: 50m
         memory: 128Mi
+      limits:
+        cpu: 500m
 recommendation:
   container:
     resources: |
       requests:
         cpu: 50m
         memory: 128Mi
+      limits:
+        cpu: 100m
 reservation:
   container:
     resources: |
       requests:
         cpu: 50m
         memory: 128Mi
+      limits:
+        cpu: 1500m
 search:
   container:
     resources: |
       requests:
         cpu: 50m
         memory: 128Mi
+      limits:
+        cpu: 350m
 user:
   container:
     resources: |
       requests:
         cpu: 50m
         memory: 128Mi
+      limits:
+        cpu: 100m
