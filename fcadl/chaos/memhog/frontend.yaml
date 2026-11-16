@@ -13,5 +13,5 @@ spec:
   stressors:
     memory:
       workers: 1
-      size: '95%'
+      size: '400MiB'
   duration: '3600s'

@@ -15,7 +15,7 @@ Everything here was written and checked on a Mac without a cluster (see "What ha
 | `config.sh` | All settings (namespace, fault services, timings, cluster size, output dir). Every value can be overridden from the environment. |
 | `k8startup_hotel.sh [values file]` | Fresh minikube cluster (as `socialNetwork/k8startup.sh`: 5 nodes × 2 CPU × 8 GB, kubelet housekeeping 1 s, CSI hostpath, Prometheus local PV), hotelReservation via Helm, Prometheus, Chaos Mesh, chaosd on the nodes, port-forwards (frontend :5000, Prometheus :9090), health checks. |
 | `values-fcadl.yaml`, `values-memlimit.yaml` | Helm overlays: CPU 50m / memory 128Mi requests on the 8 application services and a per-service CPU limit (about 1.5x the normal peak, as in the Social Network chart at commit 4c82243 that produced the published data; table in the file); databases/memcached unlimited; `values-memlimit` adds a 512Mi memory limit (used for the `memhog` fault only; `memhog_nn` = noisy neighbour, no limit). |
-| `chaos/<fault>/<service>.yaml`, `chaos/gen_chaos.py` | Chaos Mesh manifests: `cpuhog` (StressChaos, 2 workers, 100%), `memhog` and `memhog_nn` (StressChaos memory, 1 worker, 95%), `networkdelay` (NetworkChaos 50 ms ± 50 ms); one pod, 3600 s. Parameters follow the Social Network runs. |
+| `chaos/<fault>/<service>.yaml`, `chaos/gen_chaos.py` | Chaos Mesh manifests: `cpuhog` (StressChaos, 2 workers, 100%), `memhog` (StressChaos memory, 1 worker, 400MiB, under a 512Mi limit) and `memhog_nn` (12 workers, 6120MiB in total, no limit), `networkdelay` (NetworkChaos 50 ms ± 50 ms); one pod, 3600 s. Parameters follow the Social Network runs; memory sizes reproduce the Social Network data (see decision 4). |
 | `locust/locust_hotel.py` | Time-varying load: `HOTEL_REQUEST=search|recommend|reserve`, users per second from `HOTEL_CSV`. Requests copy `hotelReservation/wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua`. |
 | `run_one.sh <fault> <service> <rep> [workload]` | One dataset: fresh cluster → 3 Locust streams (search ← `sin/<rep>/cp_workload.csv`, recommend ← `hts`, reserve ← `uts`) → 90 min → apply fault, record `fault_time.txt` → 60 min → remove fault → scrape last 2 h → `make_dataset.py`. ≈ 2.6 h. |
 | `run_all.sh [rounds]` | Every fault × service, in rounds (round r = rep r), resumable (skips datasets with `fault_inject.txt`). Default 2 rounds = 32 datasets ≈ 85 h. Failures go to `$DATA_DIR/failures.log`. |
@@ -62,9 +62,18 @@ Default `DATA_DIR=~/projects/hotel-data`.
    Social Network data (compose-post capped at 500m, home-timeline at 100m). An earlier version had no
    CPU limits (copied from the edited WSL working copy), so a CPU hog reached 2 cores; those 3 cpuhog
    datasets are kept in `~/projects/hotel-data-nolimit`.
-4. Memory limits: 512Mi for `memhog`, none for `memhog_nn`; the limits the Social Network `memhog`
-   (non-NN) runs used are not recorded anywhere.
-5. Traces (Jaeger) are not collected; FC-ADL only needs CPU.
+4. Memory faults (decided with Giles, 16 Nov 2026): 512Mi limit for `memhog`, none for `memhog_nn`.
+   Sizes are absolute because Chaos Mesh's memStress takes `95%` of total *host* memory (~59 GB on
+   this machine, in both `latest` and v2.7.2), so in a 512Mi pod it was OOM-killed every few seconds.
+   The sizes reproduce the Social Network data: its memhog targets held a steady ~395-435 MiB under a
+   ~512Mi limit (hotel at 400MiB: steady 413 MiB, no OOM kills), and its no-limit hogs a steady
+   ~6.1 GB on an 8 GB node (hotel at 6120MiB: steady 6152 MiB, node at 7.03/7.81 GiB, no OOM kills).
+   Chaos Mesh `size` is the total across workers, not per worker. The earlier `95%` memhog run is kept
+   in `~/projects/hotel-data-memhog-broken`.
+5. Chaos Mesh is pinned to v2.7.2 (`CHAOS_MESH_TAG` in `config.sh`); the chart's default `latest` is
+   a moving target. The first 4 cpuhog datasets ran on `latest` (Nov 2026); their CPU stressor
+   behaves as expected (target pinned at its CPU limit).
+6. Traces (Jaeger) are not collected; FC-ADL only needs CPU.
 
 ## Known gaps
 

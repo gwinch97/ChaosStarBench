@@ -12,6 +12,6 @@ spec:
   mode: one
   stressors:
     memory:
-      workers: 1
-      size: '95%'
+      workers: 12
+      size: '6120MiB'
   duration: '3600s'

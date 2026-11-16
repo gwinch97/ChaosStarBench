@@ -69,7 +69,8 @@ helm upgrade --install prometheus ../prometheus -n prometheus
 
 echo "----- CHAOS MESH -----"
 kubectl create namespace chaos-mesh --dry-run=client -o yaml | kubectl apply -f -
-helm upgrade --install chaos-mesh ../chaos-mesh -n chaos-mesh --set dashboard.securityMode=false
+helm upgrade --install chaos-mesh ../chaos-mesh -n chaos-mesh --set dashboard.securityMode=false \
+  --set images.tag="$CHAOS_MESH_TAG"
 for node in $(minikube node list | awk '{print $1}'); do
   minikube cp ../socialNetwork/k8install_chaosd.sh "$node":/home/docker/k8install_chaosd.sh
   minikube ssh -n "$node" -- "bash ./k8install_chaosd.sh" || true

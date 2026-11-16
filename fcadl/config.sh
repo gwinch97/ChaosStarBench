@@ -20,3 +20,8 @@ N_NODES=${N_NODES:-5}
 DATA_DIR=${DATA_DIR:-$HOME/projects/hotel-data}
 FRONTEND_PORT=${FRONTEND_PORT:-5000}
 PROM_PORT=${PROM_PORT:-9090}
+# Chaos Mesh image version. The chart's default tag is "latest" (a moving target): the Social
+# Network data (June 2025) ran whatever was current then, and in the Nov 2026 build memStress
+# sizes "95%" from total host memory, ignoring the container limit. Pin the newest release at
+# the time of the Social Network runs (v2.7.2, May 2025; chart is 2.7.1).
+CHAOS_MESH_TAG=${CHAOS_MESH_TAG:-v2.7.2}
