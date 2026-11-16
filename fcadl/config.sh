@@ -25,3 +25,5 @@ PROM_PORT=${PROM_PORT:-9090}
 # sizes "95%" from total host memory, ignoring the container limit. Pin the newest release at
 # the time of the Social Network runs (v2.7.2, May 2025; chart is 2.7.1).
 CHAOS_MESH_TAG=${CHAOS_MESH_TAG:-v2.7.2}
+# Host swap (MB) above which a running fault is removed and the dataset discarded (16 GB swap on WSL).
+SWAP_GUARD_MB=${SWAP_GUARD_MB:-12000}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write one Chaos Mesh manifest per (fault, service) into chaos/<fault>/<service>.yaml.
 Parameters follow the Social Network runs used for the paper (inferred from the published data
-and the surviving manifests): CPU hog 2 workers at 100% load; memory hog 400MiB (1 worker) under a 512Mi limit;
+and the surviving manifests): CPU hog 2 workers at 100% load; memory hog 95% (1 worker) under a 512Mi limit, containers may swap;
 network delay 50 ms +/- 50 ms jitter; all on one pod for 3600 s. memhog_nn is a 6120MiB memory
 hog (12 workers) with no pod memory limit (set at deploy time, see run_one.sh)."""
 import os
@@ -52,13 +52,15 @@ spec:
 
 
 CPU = "    cpu:\n      workers: 2\n      load: 100\n"
-# Memory sizes are absolute: Chaos Mesh's memStress (latest and v2.7.2) takes '95%' of total *host*
-# memory (~59 GB here), so inside a 512Mi pod limit it was OOM-killed every few seconds instead of
-# holding memory. Sizes reproduce what the Social Network data shows during its memory faults:
-# memhog (512Mi limit): target steady at ~395-435 MiB; no-limit hog: steady ~6.1 GB on an 8 GB node
-# (Social Network used several 510MiB workers for that).
-MEM = "    memory:\n      workers: 1\n      size: '400MiB'\n"
-MEM_NN = "    memory:\n      workers: 12\n      size: '6120MiB'\n"  # size is the total across workers
+# memhog: '95%' exactly as in the Social Network fault files. memStress takes 95% of total *host*
+# memory (~59 GB), far above the 512Mi pod limit, so the stressor sits at the limit, swaps and is
+# re-killed for the whole fault; that costs CPU in the target (Social Network: x2-3). It needs the
+# containers to be allowed to swap (allow_swap.sh, called by run_one.sh); without swap it is simply
+# OOM-killed and Chaos Mesh gives up after a few minutes.
+# memhog_nn (no memory limit): a fixed 6120MiB, the steady ~6.1 GB plateau in the Social Network
+# no-limit runs on an 8 GB node; Chaos Mesh 'size' is the total across workers.
+MEM = "    memory:\n      workers: 1\n      size: '95%'\n"
+MEM_NN = "    memory:\n      workers: 12\n      size: '6120MiB'\n"
 here = os.path.dirname(os.path.abspath(__file__))
 for svc in SERVICES:
     app = f"{svc}-hotelres"

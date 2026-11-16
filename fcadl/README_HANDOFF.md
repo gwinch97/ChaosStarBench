@@ -62,14 +62,22 @@ Default `DATA_DIR=~/projects/hotel-data`.
    Social Network data (compose-post capped at 500m, home-timeline at 100m). An earlier version had no
    CPU limits (copied from the edited WSL working copy), so a CPU hog reached 2 cores; those 3 cpuhog
    datasets are kept in `~/projects/hotel-data-nolimit`.
-4. Memory faults (decided with Giles, 16 Nov 2026): 512Mi limit for `memhog`, none for `memhog_nn`.
-   Sizes are absolute because Chaos Mesh's memStress takes `95%` of total *host* memory (~59 GB on
-   this machine, in both `latest` and v2.7.2), so in a 512Mi pod it was OOM-killed every few seconds.
-   The sizes reproduce the Social Network data: its memhog targets held a steady ~395-435 MiB under a
-   ~512Mi limit (hotel at 400MiB: steady 413 MiB, no OOM kills), and its no-limit hogs a steady
-   ~6.1 GB on an 8 GB node (hotel at 6120MiB: steady 6152 MiB, node at 7.03/7.81 GiB, no OOM kills).
-   Chaos Mesh `size` is the total across workers, not per worker. The earlier `95%` memhog run is kept
-   in `~/projects/hotel-data-memhog-broken`.
+4. Memory faults (decided with Giles, 16 Nov 2026). `memhog`: `size: '95%'`, 1 worker, exactly as
+   the Social Network fault files, under a 512Mi limit, with the containers allowed to swap
+   (`allow_swap.sh`, called by `run_one.sh`). `memhog_nn`: a fixed 6120MiB (12 workers), no limit.
+   - Why swap: memStress takes 95% of total host memory (~59 GB). In the Social Network data
+     (June 2025) the stressor survived the whole hour, its RSS sawtoothing between 150-268 MiB and
+     ~507 MiB ~170 times an hour, and target CPU rose x2-3. That is a stressor swapping at the limit.
+     On today's WSL2 kernel (cgroup v2) Kubernetes 1.28 sets memory.swap.max=0 for containers, so
+     the stressor was OOM-killed and Chaos Mesh gave up after 5-8 min (target CPU x1.1). Fixed
+     sizes below the limit (400MiB, 480MiB) held memory but gave no CPU signal (x1.0).
+   - Tested with swap allowed (95%, 10 min under load): stressor kept running (19 kill/restart
+     cycles), RSS sawtooth 493-507 MiB, target CPU x5.7 (pinned at search's 350m limit), no
+     service restarts, host swap peaked ~8 GB. `run_one.sh` removes the fault and discards the
+     dataset if host swap passes `SWAP_GUARD_MB` (12000).
+   - `memhog_nn` reproduces the Social Network no-limit plateau (~6.1 GB on an 8 GB node, target
+     CPU ~unchanged): tested steady 6152 MiB, node 7.03/7.81 GiB, no OOM kills.
+   - Superseded memhog runs (95% without swap; 400MiB) are in `~/projects/hotel-data-memhog-broken`.
 5. Chaos Mesh is pinned to v2.7.2 (`CHAOS_MESH_TAG` in `config.sh`); the chart's default `latest` is
    a moving target. The first 4 cpuhog datasets ran on `latest` (Nov 2026); their CPU stressor
    behaves as expected (target pinned at its CPU limit).

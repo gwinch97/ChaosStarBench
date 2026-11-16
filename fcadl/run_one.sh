@@ -44,6 +44,7 @@ VALUES=values-fcadl.yaml
 [ "$FAULT" = memhog ] && VALUES=values-memlimit.yaml
 minikube delete || true
 bash ./k8startup_hotel.sh "$VALUES"
+bash ./allow_swap.sh
 
 # three request streams, each following one of the Social Network sinusoidal workloads
 PIDS=()
@@ -56,12 +57,25 @@ done
 echo "load started $(date "+%Y-%m-%dT%H:%M:%S%z")"
 sleep "$PRE_FAULT_S"
 
+bash ./allow_swap.sh "$SVC-$RELEASE"   # again for the target, in case its pod restarted since startup
 kubectl apply -f "$CHAOS"
 date +%s > "$OUT/fault_time.txt"
 echo "fault applied $(date "+%Y-%m-%dT%H:%M:%S%z"): $CHAOS"
+# Swap guard: the 95% memory stressor asks for ~59 GB; if host swap passes SWAP_GUARD_MB, stop the
+# fault and do not write the dataset (run_all.sh will retry it).
+rm -f "$OUT/.swap_abort"
+( while sleep 10; do
+    used=$(free -m | awk '/^Swap:/{print $3}')
+    if [ "${used:-0}" -gt "$SWAP_GUARD_MB" ]; then
+      echo "swap guard: ${used} MB used > $SWAP_GUARD_MB MB, removing fault $(date +%T)"
+      touch "$OUT/.swap_abort"; kubectl delete -f "$CHAOS" --ignore-not-found; break
+    fi
+  done ) & GUARD=$!
 sleep "$FAULT_S"
+kill "$GUARD" 2>/dev/null || true
 kubectl delete -f "$CHAOS" --ignore-not-found
 kill "${PIDS[@]}" 2>/dev/null || true
+[ -f "$OUT/.swap_abort" ] && { echo "ABORT: swap guard triggered during the fault; dataset not written"; exit 1; }
 # no fault_inject.txt on failure, so run_all.sh will redo this dataset
 clock_check run "$OUT/.clock_start" || { echo "ABORT: kernel clock drifted during the run; dataset not written"; exit 1; }
 
