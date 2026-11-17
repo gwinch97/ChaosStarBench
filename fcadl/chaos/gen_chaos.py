@@ -2,8 +2,8 @@
 """Write one Chaos Mesh manifest per (fault, service) into chaos/<fault>/<service>.yaml.
 Parameters follow the Social Network runs used for the paper (inferred from the published data
 and the surviving manifests): CPU hog 2 workers at 100% load; memory hog 95% (1 worker) under a 512Mi limit, containers may swap;
-network delay 50 ms +/- 50 ms jitter; all on one pod for 3600 s. memhog_nn is a 6120MiB memory
-hog (12 workers) with no pod memory limit (set at deploy time, see run_one.sh)."""
+network delay 50 ms +/- 50 ms jitter; all on one pod for 3600 s. memhog_nn is the same 95% memory
+hog with no pod memory limit and no swap for the target (set at deploy/fault time, see run_one.sh)."""
 import os
 
 NS = "hotelreservation"
@@ -57,10 +57,12 @@ CPU = "    cpu:\n      workers: 2\n      load: 100\n"
 # re-killed for the whole fault; that costs CPU in the target (Social Network: x2-3). It needs the
 # containers to be allowed to swap (allow_swap.sh, called by run_one.sh); without swap it is simply
 # OOM-killed and Chaos Mesh gives up after a few minutes.
-# memhog_nn (no memory limit): a fixed 6120MiB, the steady ~6.1 GB plateau in the Social Network
-# no-limit runs on an 8 GB node; Chaos Mesh 'size' is the total across workers.
+# memhog_nn (no memory limit, noisy neighbour): the same 95% stressor. It fills the 8 GB node, is
+# OOM-killed and regrows, as in the Social Network no-limit runs (RSS ~6 GB median with deep drops,
+# target CPU x13-45). run_one.sh denies swap to the target for this fault, otherwise the node swaps
+# the stressor and thrashes instead. (A fixed 6120MiB, tried first, sat flat with no CPU effect.)
 MEM = "    memory:\n      workers: 1\n      size: '95%'\n"
-MEM_NN = "    memory:\n      workers: 12\n      size: '6120MiB'\n"
+MEM_NN = MEM
 here = os.path.dirname(os.path.abspath(__file__))
 for svc in SERVICES:
     app = f"{svc}-hotelres"

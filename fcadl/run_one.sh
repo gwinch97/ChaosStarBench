@@ -58,6 +58,9 @@ echo "load started $(date "+%Y-%m-%dT%H:%M:%S%z")"
 sleep "$PRE_FAULT_S"
 
 bash ./allow_swap.sh "$SVC-$RELEASE"   # again for the target, in case its pod restarted since startup
+# memhog_nn: no swap for the target, so the 95% stressor is OOM-killed and regrows at the node's
+# memory limit (as in the Social Network data) instead of the node swapping and thrashing
+[ "$FAULT" = memhog_nn ] && SWAP=0 bash ./allow_swap.sh "$SVC-$RELEASE"
 kubectl apply -f "$CHAOS"
 date +%s > "$OUT/fault_time.txt"
 echo "fault applied $(date "+%Y-%m-%dT%H:%M:%S%z"): $CHAOS"
@@ -68,12 +71,12 @@ rm -f "$OUT/.swap_abort"
     used=$(free -m | awk '/^Swap:/{print $3}')
     if [ "${used:-0}" -gt "$SWAP_GUARD_MB" ]; then
       echo "swap guard: ${used} MB used > $SWAP_GUARD_MB MB, removing fault $(date +%T)"
-      touch "$OUT/.swap_abort"; kubectl delete -f "$CHAOS" --ignore-not-found; break
+      touch "$OUT/.swap_abort"; bash ./remove_fault.sh "$CHAOS"; break
     fi
   done ) & GUARD=$!
 sleep "$FAULT_S"
 kill "$GUARD" 2>/dev/null || true
-kubectl delete -f "$CHAOS" --ignore-not-found
+bash ./remove_fault.sh "$CHAOS" || echo "WARNING: fault removal incomplete (see above)"
 kill "${PIDS[@]}" 2>/dev/null || true
 [ -f "$OUT/.swap_abort" ] && { echo "ABORT: swap guard triggered during the fault; dataset not written"; exit 1; }
 # no fault_inject.txt on failure, so run_all.sh will redo this dataset

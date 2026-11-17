@@ -15,7 +15,7 @@ Everything here was written and checked on a Mac without a cluster (see "What ha
 | `config.sh` | All settings (namespace, fault services, timings, cluster size, output dir). Every value can be overridden from the environment. |
 | `k8startup_hotel.sh [values file]` | Fresh minikube cluster (as `socialNetwork/k8startup.sh`: 5 nodes × 2 CPU × 8 GB, kubelet housekeeping 1 s, CSI hostpath, Prometheus local PV), hotelReservation via Helm, Prometheus, Chaos Mesh, chaosd on the nodes, port-forwards (frontend :5000, Prometheus :9090), health checks. |
 | `values-fcadl.yaml`, `values-memlimit.yaml` | Helm overlays: CPU 50m / memory 128Mi requests on the 8 application services and a per-service CPU limit (about 1.5x the normal peak, as in the Social Network chart at commit 4c82243 that produced the published data; table in the file); databases/memcached unlimited; `values-memlimit` adds a 512Mi memory limit (used for the `memhog` fault only; `memhog_nn` = noisy neighbour, no limit). |
-| `chaos/<fault>/<service>.yaml`, `chaos/gen_chaos.py` | Chaos Mesh manifests: `cpuhog` (StressChaos, 2 workers, 100%), `memhog` (StressChaos memory, 1 worker, 400MiB, under a 512Mi limit) and `memhog_nn` (12 workers, 6120MiB in total, no limit), `networkdelay` (NetworkChaos 50 ms ± 50 ms); one pod, 3600 s. Parameters follow the Social Network runs; memory sizes reproduce the Social Network data (see decision 4). |
+| `chaos/<fault>/<service>.yaml`, `chaos/gen_chaos.py` | Chaos Mesh manifests: `cpuhog` (StressChaos, 2 workers, 100%), `memhog` (StressChaos memory, 1 worker, 400MiB, under a 512Mi limit) and `memhog_nn` (the same 95% stressor, no memory limit, no swap for the target), `networkdelay` (NetworkChaos 50 ms ± 50 ms); one pod, 3600 s. Parameters follow the Social Network runs; memory sizes reproduce the Social Network data (see decision 4). |
 | `locust/locust_hotel.py` | Time-varying load: `HOTEL_REQUEST=search|recommend|reserve`, users per second from `HOTEL_CSV`. Requests copy `hotelReservation/wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua`. |
 | `run_one.sh <fault> <service> <rep> [workload]` | One dataset: fresh cluster → 3 Locust streams (search ← `sin/<rep>/cp_workload.csv`, recommend ← `hts`, reserve ← `uts`) → 90 min → apply fault, record `fault_time.txt` → 60 min → remove fault → scrape last 2 h → `make_dataset.py`. ≈ 2.6 h. |
 | `run_all.sh [rounds]` | Every fault × service, in rounds (round r = rep r), resumable (skips datasets with `fault_inject.txt`). Default 2 rounds = 32 datasets ≈ 85 h. Failures go to `$DATA_DIR/failures.log`. |
@@ -64,7 +64,8 @@ Default `DATA_DIR=~/projects/hotel-data`.
    datasets are kept in `~/projects/hotel-data-nolimit`.
 4. Memory faults (decided with Giles, 16 Nov 2026). `memhog`: `size: '95%'`, 1 worker, exactly as
    the Social Network fault files, under a 512Mi limit, with the containers allowed to swap
-   (`allow_swap.sh`, called by `run_one.sh`). `memhog_nn`: a fixed 6120MiB (12 workers), no limit.
+   (`allow_swap.sh`, called by `run_one.sh`). `memhog_nn`: the same 95% stressor with no memory
+   limit, and swap denied to the target (`SWAP=0 allow_swap.sh`, called by `run_one.sh`).
    - Why swap: memStress takes 95% of total host memory (~59 GB). In the Social Network data
      (June 2025) the stressor survived the whole hour, its RSS sawtoothing between 150-268 MiB and
      ~507 MiB ~170 times an hour, and target CPU rose x2-3. That is a stressor swapping at the limit.
@@ -75,8 +76,17 @@ Default `DATA_DIR=~/projects/hotel-data`.
      cycles), RSS sawtooth 493-507 MiB, target CPU x5.7 (pinned at search's 350m limit), no
      service restarts, host swap peaked ~8 GB. `run_one.sh` removes the fault and discards the
      dataset if host swap passes `SWAP_GUARD_MB` (12000).
-   - `memhog_nn` reproduces the Social Network no-limit plateau (~6.1 GB on an 8 GB node, target
-     CPU ~unchanged): tested steady 6152 MiB, node 7.03/7.81 GiB, no OOM kills.
+   - `memhog_nn`: the Social Network no-limit runs (`cp_memory_hog_*`, `test_memhog_real_*`) show
+     the stressor filling the 8 GB node, being OOM-killed and regrowing (RSS median ~6-6.7 GB, drops
+     to 2-2400 MiB) with target CPU x13-45. Tested here (10 min under load): with swap allowed the
+     node swapped the stressor and thrashed (~21 host cores) and Chaos Mesh could not remove the
+     fault; with swap denied to the target: 15 kill/regrow cycles, RSS median 7.1 GB (9-7906 MiB),
+     target CPU x2.4 (0.068 -> 0.159, not pinned), short reclaim bursts on the node, one neighbour
+     (profile) restarted twice, fault removed in 7 s. Chosen: swap denied (decided with Giles,
+     17 Nov 2026); the target CPU rise is milder than in Social Network. A fixed 6120MiB (tried
+     first) sat flat with no CPU effect and is not comparable.
+   - `remove_fault.sh` removes every fault: normal delete with a 90 s timeout, then kills stressors
+     on the nodes directly and clears the fault's finalizers if Chaos Mesh is stuck.
    - Superseded memhog runs (95% without swap; 400MiB) are in `~/projects/hotel-data-memhog-broken`.
 5. Chaos Mesh is pinned to v2.7.2 (`CHAOS_MESH_TAG` in `config.sh`); the chart's default `latest` is
    a moving target. The first 4 cpuhog datasets ran on `latest` (Nov 2026); their CPU stressor
