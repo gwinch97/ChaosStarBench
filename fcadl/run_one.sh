@@ -60,7 +60,7 @@ sleep "$PRE_FAULT_S"
 bash ./allow_swap.sh "$SVC-$RELEASE"   # again for the target, in case its pod restarted since startup
 # memhog_nn: no swap for the target, so the 95% stressor is OOM-killed and regrows at the node's
 # memory limit (as in the Social Network data) instead of the node swapping and thrashing
-[ "$FAULT" = memhog_nn ] && SWAP=0 bash ./allow_swap.sh "$SVC-$RELEASE"
+[ "$FAULT" = memhog_nn ] && SWAP=0 MEM_MAX="$NN_MEM_CAP" bash ./allow_swap.sh "$SVC-$RELEASE"
 kubectl apply -f "$CHAOS"
 date +%s > "$OUT/fault_time.txt"
 echo "fault applied $(date "+%Y-%m-%dT%H:%M:%S%z"): $CHAOS"

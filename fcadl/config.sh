@@ -27,3 +27,5 @@ PROM_PORT=${PROM_PORT:-9090}
 CHAOS_MESH_TAG=${CHAOS_MESH_TAG:-v2.7.2}
 # Host swap (MB) above which a running fault is removed and the dataset discarded (16 GB swap on WSL).
 SWAP_GUARD_MB=${SWAP_GUARD_MB:-12000}
+# memhog_nn: cgroup memory cap on the target container during the fault (see allow_swap.sh)
+NN_MEM_CAP=${NN_MEM_CAP:-6451M}

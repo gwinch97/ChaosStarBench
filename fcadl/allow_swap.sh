@@ -3,6 +3,13 @@
 #
 #   allow_swap.sh [app ...]          memory.swap.max=max on containers that have a memory limit
 #   SWAP=0 allow_swap.sh app ...     memory.swap.max=0 on all of the app's containers
+#   SWAP=0 MEM_MAX=6451M allow_swap.sh app ...   also memory.max on the app's main container
+#
+# Why MEM_MAX (memhog_nn): hotel's other pods use ~0.8 GB of the 8 GB node, so an uncapped 95%
+# stressor fills the node completely before it is killed; that starved the kubelet (~70% of 5 s
+# scrapes lost on the node). In the Social Network run the stressor topped out at ~6.1-6.3 GiB
+# with the node ~92% full (other pods ~1.1 GB). Capping the target container at ~6.3 GiB gives the
+# same node fullness (~7.1 GB of 7.8) and keeps the noisy-neighbour squeeze.
 #
 # Why (memhog): the Social Network memory-leak runs (size: 95%, June 2025) show the stressor
 # surviving the whole fault, its memory swapping between the 512Mi limit and a lower floor ~170
@@ -19,6 +26,7 @@
 cd "$(dirname "$0")"
 source ./config.sh
 VALUE=${SWAP:-max}
+MEMMAX=${MEM_MAX:-}
 APPS=${*:-"frontend-$RELEASE geo-$RELEASE profile-$RELEASE rate-$RELEASE recommendation-$RELEASE reservation-$RELEASE search-$RELEASE user-$RELEASE"}
 for app in $APPS; do
   kubectl get pods -n "$NAMESPACE" -l app="$app" \
@@ -30,6 +38,7 @@ for app in $APPS; do
       [ -n \"\$d\" ] || { echo 'no cgroup'; exit; }
       for c in \$d/docker-*.scope; do
         [ \"$VALUE\" = max ] && [ \"\$(cat \$c/memory.max)\" = max ] && continue
+        if [ -n \"$MEMMAX\" ] && [ \"\$(cat \$c/memory.current)\" -gt 2000000 ]; then echo $MEMMAX > \$c/memory.max; fi
         echo $VALUE > \$c/memory.swap.max && echo \"swap.max=\$(cat \$c/memory.swap.max) (memory.max=\$(cat \$c/memory.max))\"
       done" 2>&1 | tr '\n' ' ')
     echo "swap $VALUE $app on $node: ${res:-no matching containers}"

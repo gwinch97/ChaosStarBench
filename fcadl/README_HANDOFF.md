@@ -65,7 +65,8 @@ Default `DATA_DIR=~/projects/hotel-data`.
 4. Memory faults (decided with Giles, 16 Nov 2026). `memhog`: `size: '95%'`, 1 worker, exactly as
    the Social Network fault files, under a 512Mi limit, with the containers allowed to swap
    (`allow_swap.sh`, called by `run_one.sh`). `memhog_nn`: the same 95% stressor with no memory
-   limit, and swap denied to the target (`SWAP=0 allow_swap.sh`, called by `run_one.sh`).
+   limit, swap denied to the target and its container capped at `NN_MEM_CAP` (6451M, ~6.3 GiB)
+   (`SWAP=0 MEM_MAX=... allow_swap.sh`, called by `run_one.sh`).
    - Why swap: memStress takes 95% of total host memory (~59 GB). In the Social Network data
      (June 2025) the stressor survived the whole hour, its RSS sawtoothing between 150-268 MiB and
      ~507 MiB ~170 times an hour, and target CPU rose x2-3. That is a stressor swapping at the limit.
@@ -85,6 +86,14 @@ Default `DATA_DIR=~/projects/hotel-data`.
      (profile) restarted twice, fault removed in 7 s. Chosen: swap denied (decided with Giles,
      17 Nov 2026); the target CPU rise is milder than in Social Network. A fixed 6120MiB (tried
      first) sat flat with no CPU effect and is not comparable.
+   - `memhog_nn` cap: uncapped, the stressor filled the whole node (hotel's other pods use only ~0.8 GB)
+     and starved the kubelet: ~70% of 5 s scrapes lost on the faulted node (`search_memhog_nn_sin_0`,
+     kept in `hotel-data-memhog-broken`). In Social Network (`test_memhog_real_1`) the stressor topped
+     out at 6.1-6.3 GiB with the node at 7.13 GB median / 7.27 GB max (other pods 1.06 GB). Capped at
+     6.3 GiB (decided with Giles, 17 Nov 2026), tested 10 min: no scrape gaps (max 7 s), node peak
+     7.26 GiB, target CPU x5.9 pinned at its limit, only the stressor killed, fault removed in 1 s.
+     Target RSS median 2.6 GiB (sawtooth 0.01-6.25) vs ~6.1 GiB in Social Network, so the squeeze on
+     neighbours comes in waves rather than being sustained.
    - `remove_fault.sh` removes every fault: normal delete with a 90 s timeout, then kills stressors
      on the nodes directly and clears the fault's finalizers if Chaos Mesh is stuck.
    - Superseded memhog runs (95% without swap; 400MiB) are in `~/projects/hotel-data-memhog-broken`.
