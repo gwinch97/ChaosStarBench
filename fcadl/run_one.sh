@@ -46,6 +46,22 @@ minikube delete || true
 bash ./k8startup_hotel.sh "$VALUES"
 bash ./allow_swap.sh
 
+# kubectl port-forward can die (pod restart, connection glitch). Restart it if the local port stops
+# answering: the frontend one carries the load, the Prometheus one the final scrape. A dead
+# Prometheus forward cost search_networkdelay_sin_0 its scrape after a complete run.
+ensure_pf() {  # ensure_pf LOCAL_PORT NAMESPACE SERVICE REMOTE_PORT
+  curl -s -o /dev/null -m 5 "http://localhost:$1/" && return 0
+  echo "port-forward to $3 not answering, restarting $(date +%T)"
+  pkill -f "port-forward -n $2 svc/$3 " 2>/dev/null
+  nohup kubectl port-forward -n "$2" "svc/$3" "$1:$4" >>"/tmp/pf-$3.log" 2>&1 &
+  sleep 5
+}
+pf_check() {
+  ensure_pf "$FRONTEND_PORT" "$NAMESPACE" "frontend-$RELEASE" 5000
+  ensure_pf "$PROM_PORT" prometheus prometheus-server 80
+}
+( while sleep 30; do pf_check; done ) & PFWATCH=$!
+
 # three request streams, each following one of the Social Network sinusoidal workloads
 PIDS=()
 for pair in "search:cp" "recommend:hts" "reserve:uts"; do
@@ -82,7 +98,13 @@ kill "${PIDS[@]}" 2>/dev/null || true
 # no fault_inject.txt on failure, so run_all.sh will redo this dataset
 clock_check run "$OUT/.clock_start" || { echo "ABORT: kernel clock drifted during the run; dataset not written"; exit 1; }
 
-python3 scrape_cpu.py "${SCRAPE_WINDOW_S}s" "$OUT" --namespace "$NAMESPACE" --prom "http://localhost:$PROM_PORT"
+kill "$PFWATCH" 2>/dev/null || true
+for attempt in 1 2 3; do
+  pf_check
+  python3 scrape_cpu.py "${SCRAPE_WINDOW_S}s" "$OUT" --namespace "$NAMESPACE" --prom "http://localhost:$PROM_PORT" && break
+  [ "$attempt" = 3 ] && { echo "ABORT: could not scrape Prometheus; dataset not written"; exit 1; }
+  echo "scrape failed (attempt $attempt), retrying in 20 s"; sleep 20
+done
 python3 make_dataset.py "$OUT" --duration "$SCRAPE_WINDOW_S" --step "$STEP_S"
 kubectl get pods -A -o json | python3 -c 'import csv,json,sys; w=csv.writer(sys.stdout,quoting=csv.QUOTE_ALL,lineterminator="\n"); w.writerow(["name","namespace","node"]); [w.writerow([p["metadata"]["name"],p["metadata"]["namespace"],p["spec"].get("nodeName","")]) for p in json.load(sys.stdin)["items"]]' > "$OUT/deployment.csv"
 cp "$CHAOS" "$VALUES" "$OUT/"
