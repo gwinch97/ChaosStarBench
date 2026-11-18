@@ -3,7 +3,14 @@
 #
 #   allow_swap.sh [app ...]          memory.swap.max=max on containers that have a memory limit
 #   SWAP=0 allow_swap.sh app ...     memory.swap.max=0 on all of the app's containers
-#   SWAP=0 MEM_MAX=6451M allow_swap.sh app ...   also memory.max on the app's main container
+#   SWAP=0 MEM_MAX=6451M allow_swap.sh app ...   also memory.max on the app's main container, and
+#                                                the service's oom_score_adj set to -500
+#
+# Why oom_score_adj (memhog_nn): Kubernetes gives burstable pods' processes oom_score_adj 999 and
+# Chaos Mesh's stressor 1000, so right after a restart (tiny RSS) the kernel sometimes killed the
+# service instead of the stressor; the container restarted, the stressor went with it and the
+# fault ended early (3 of the first 4 capped memhog_nn runs, e.g. user killed after 44 stressor
+# kills). -500 for the service makes the stressor the victim every time.
 #
 # Why MEM_MAX (memhog_nn): hotel's other pods use ~0.8 GB of the 8 GB node, so an uncapped 95%
 # stressor fills the node completely before it is killed; that starved the kubelet (~70% of 5 s
@@ -38,7 +45,14 @@ for app in $APPS; do
       [ -n \"\$d\" ] || { echo 'no cgroup'; exit; }
       for c in \$d/docker-*.scope; do
         [ \"$VALUE\" = max ] && [ \"\$(cat \$c/memory.max)\" = max ] && continue
-        if [ -n \"$MEMMAX\" ] && [ \"\$(cat \$c/memory.current)\" -gt 2000000 ]; then echo $MEMMAX > \$c/memory.max; fi
+        if [ -n \"$MEMMAX\" ] && [ \"\$(cat \$c/memory.current)\" -gt 2000000 ]; then
+          echo $MEMMAX > \$c/memory.max
+          # make the stressor (oom_score_adj 1000) the OOM victim, never the service (999 by default)
+          for p in \$(cat \$c/cgroup.procs); do
+            [ \"\$(cat /proc/\$p/comm 2>/dev/null)\" = memStress ] || echo -500 > /proc/\$p/oom_score_adj 2>/dev/null
+          done
+          echo \"oom_score_adj: \$(for p in \$(cat \$c/cgroup.procs); do echo -n \"\$(cat /proc/\$p/comm)=\$(cat /proc/\$p/oom_score_adj) \"; done)\"
+        fi
         echo $VALUE > \$c/memory.swap.max && echo \"swap.max=\$(cat \$c/memory.swap.max) (memory.max=\$(cat \$c/memory.max))\"
       done" 2>&1 | tr '\n' ' ')
     echo "swap $VALUE $app on $node: ${res:-no matching containers}"
