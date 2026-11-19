@@ -90,7 +90,31 @@ rm -f "$OUT/.swap_abort"
       touch "$OUT/.swap_abort"; bash ./remove_fault.sh "$CHAOS"; break
     fi
   done ) & GUARD=$!
+# Keep-alive for memory faults: Chaos Mesh sometimes stops restarting the 95% stressor after a few
+# OOM kills (search_memhog_nn_sin_0: ~6 min of fault, then none for 54 min). If no stressor runs on
+# the target's node for two checks in a row, re-apply the fault (logged); fault_time is unchanged.
+KEEP=""
+if [ "$FAULT" = memhog ] || [ "$FAULT" = memhog_nn ]; then
+  ( misses=0
+    while sleep 20; do
+      node=$(kubectl get pods -n "$NAMESPACE" -l app="$SVC-$RELEASE" -o jsonpath='{.items[0].spec.nodeName}' 2>/dev/null)
+      [ -n "$node" ] || continue
+      if [ "$(timeout 20 docker exec "$node" sh -c 'pgrep -x memStress | wc -l' 2>/dev/null || echo 1)" -gt 0 ]; then
+        misses=0
+      else
+        misses=$((misses + 1))
+        if [ "$misses" -ge 2 ]; then
+          echo "keep-alive: no stressor on $node, re-applying fault $(date +%T)"
+          bash ./remove_fault.sh "$CHAOS" >/dev/null 2>&1
+          [ "$FAULT" = memhog_nn ] && SWAP=0 MEM_MAX="$NN_MEM_CAP" bash ./allow_swap.sh "$SVC-$RELEASE" >/dev/null 2>&1
+          kubectl apply -f "$CHAOS" >/dev/null 2>&1
+          misses=0
+        fi
+      fi
+    done ) & KEEP=$!
+fi
 sleep "$FAULT_S"
+[ -n "$KEEP" ] && kill "$KEEP" 2>/dev/null
 kill "$GUARD" 2>/dev/null || true
 bash ./remove_fault.sh "$CHAOS" || echo "WARNING: fault removal incomplete (see above)"
 kill "${PIDS[@]}" 2>/dev/null || true
